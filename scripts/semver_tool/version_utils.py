@@ -1,3 +1,4 @@
+import copy
 import io
 
 import yaml
@@ -30,12 +31,28 @@ class Version(object):
     build: int
     env: str
 
-    def __init__(self, major=1, minor=0, patch=0, build=0, env="main"):
+    def __init__(self, major=0, minor=0, patch=0, build=0, env="main"):
         self.major = major
         self.minor = minor
         self.patch = patch
         self.build = build
         self.env = env
+
+    def bump_major(self):
+        self.major += 1
+        return self
+
+    def bump_minor(self):
+        self.major += 1
+        return self
+
+    def bump_patch(self):
+        self.patch += 1
+        return self
+
+    def bump_build(self):
+        self.build += 1
+        return self
 
     @staticmethod
     def from_string(string):
@@ -74,8 +91,8 @@ def get_version(version: Version, commits, scope):
     major, minor, patch, build = 0, 0, 0, 0
 
     for message in commits:
-        message_scope = get_scope(scope)
-        if message_scope is not None and message_scope != message:
+        message_scope = get_scope(message)
+        if message_scope is not None and message_scope != scope:
             break
 
         bump = determine_bump(message)
@@ -89,15 +106,16 @@ def get_version(version: Version, commits, scope):
         elif bump == "build":
             build += 1
 
+    new_version = copy.deepcopy(version)
     if major:
-        return Version(version.major + 1, version.minor, version.patch, version.build)
+        return new_version.bump_major()
     elif minor:
-        return Version(version.major, version.minor + 1, version.patch, version.build)
+        return new_version.bump_minor()
     elif patch:
-        return Version(version.major, version.minor, version.patch + 1, version.build)
+        return new_version.bump_patch()
     elif build:
-        return Version(version.major, version.minor, version.patch, version.build + 1)
-    return Version(version.major, version.minor, version.patch, version.build)
+        return new_version.bump_build()
+    return new_version
 
 
 def determine_bump(message):
@@ -125,12 +143,12 @@ def get_current_version(project, env):
             version_yaml = yaml.safe_load(stream)
 
             if version_yaml is None:
-                return Version()
+                return Version(env=env)
 
             try:
                 return Version.from_string(version_yaml[env][project])
             except KeyError:
-                return Version()
+                return Version(env=env)
     except FileNotFoundError:
         return Version()
 
