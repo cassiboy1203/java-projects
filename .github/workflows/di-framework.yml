@@ -59,7 +59,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: versioning
-    if: ${{ jobs.versioning.outputs.release_needed }} -eq true
+    if: ${{ needs.versioning.outputs.release_needed }} -eq true
 
     steps:
       - name: Checkout
@@ -74,7 +74,7 @@ jobs:
       - name: Update maven version
         working-directory: di-framework
         run: |
-          mvn versions:set -DnewVersion=${{ jobs.versioning.outputs.version }}
+          mvn versions:set -DnewVersion=${{ needs.versioning.outputs.version }}
           mvn versions:commit
 
       - name: Build project
@@ -98,7 +98,7 @@ jobs:
     needs:
       - versioning
       - build
-    if: ${{ jobs.versioning.outputs.release_needed }} -eq true
+    if: ${{ needs.versioning.outputs.release_needed }} -eq true
 
     steps:
       - name: Checkout
@@ -132,7 +132,7 @@ jobs:
 
       - name: Create tag
         run: |
-          VERSION=${{ jobs.versioning.outputs.version }}
+          VERSION=${{ needs.versioning.outputs.version }}
           git tag di-framework_$VERSION
           git push origin di-framework_$VERSION
 
@@ -140,14 +140,14 @@ jobs:
         uses: actions/download-artifact@2
         with:
           name: di-framework_jar
-          path: di-framework_${{ jobs.versioning.outputs.version }}.jar
+          path: di-framework_${{ needs.versioning.outputs.version }}.jar
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: di-framework_${{ jobs.versioning.outputs.version }}
-          name: di-framework v${{ jobs.versioning.outputs.version }}
+          tag_name: di-framework_${{ needs.versioning.outputs.version }}
+          name: di-framework v${{ needs.versioning.outputs.version }}
           body_path: release_notes/di-framework.md
-          files: di-framework_${{ jobs.versioning.outputs.version }}.jar
+          files: di-framework_${{ needs.versioning.outputs.version }}.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
