@@ -42,6 +42,9 @@ jobs:
             echo "release_needed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: rename release notes
+        run: mv release_notes.md di-framework.md
+
       - name: Upload version file
         uses: actions/upload-artifact@v4
         with:
@@ -52,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release_notes
-          path: release_notes.md
+          path: di-framework.md
 
     outputs:
       version: ${{ steps.versioning.outputs.version }}
