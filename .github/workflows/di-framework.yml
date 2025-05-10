@@ -42,10 +42,6 @@ jobs:
             echo "release_needed=false" >> $GITHUB_OUTPUT
           fi
 
-      - run: git status
-      - run: echo ${{ steps.versioning.outputs.version }}
-      - run: echo ${{ steps.versioning.outputs.release_needed }}
-
       - name: Upload version file
         uses: actions/upload-artifact@v4
         with:
@@ -87,10 +83,6 @@ jobs:
         working-directory: di-framework
         run: mvn clean package
 
-      - run: git status
-
-      - run: ls -al di-framework/target
-
       - name: Upload updated pom.xml
         uses: actions/upload-artifact@v4
         with:
@@ -118,19 +110,21 @@ jobs:
         uses: actions/download-artifact@2
         with:
           name: version
-          path: version.yaml
+          path: ./
 
       - name: Download release notes
         uses: actions/download-artifact@2
         with:
           name: release_notes
-          path: release_notes/di-framework.md
+          path: release_notes/
 
       - name: Download pom.xml
         uses: actions/download-artifact@2
         with:
           name: di-framework_pom
-          path: di-framework/pom.xml
+          path: di-framework/
+
+      - run: git status
 
       - name: Commit version, release notes and updated pom.xml
         run: |
@@ -150,7 +144,9 @@ jobs:
         uses: actions/download-artifact@2
         with:
           name: di-framework_jar
-          path: di-framework_${{ needs.versioning.outputs.version }}.jar
+          path: ./
+
+      - run: git status
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
