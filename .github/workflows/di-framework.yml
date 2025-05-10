@@ -107,19 +107,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download version file
-        uses: actions/download-artifact@2
+        uses: actions/download-artifact@4
         with:
           name: version
           path: ./
 
       - name: Download release notes
-        uses: actions/download-artifact@2
+        uses: actions/download-artifact@4
         with:
           name: release_notes
           path: release_notes/
 
       - name: Download pom.xml
-        uses: actions/download-artifact@2
+        uses: actions/download-artifact@4
         with:
           name: di-framework_pom
           path: di-framework/
@@ -141,7 +141,7 @@ jobs:
           git push origin di-framework_$VERSION
 
       - name: Download jar
-        uses: actions/download-artifact@2
+        uses: actions/download-artifact@4
         with:
           name: di-framework_jar
           path: ./
