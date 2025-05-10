@@ -65,7 +65,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: versioning
-    if: needs.versioning.outputs.release_needed == true
+    if: needs.versioning.outputs.release_needed == 'true'
 
     steps:
       - name: Checkout
@@ -108,7 +108,7 @@ jobs:
     needs:
       - versioning
       - build
-    if: needs.versioning.outputs.release_needed == true
+    if: needs.versioning.outputs.release_needed == 'true'
 
     steps:
       - name: Checkout
