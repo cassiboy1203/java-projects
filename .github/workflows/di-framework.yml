@@ -27,7 +27,20 @@ jobs:
 
       - name: Determine version
         id: versioning
-        run: ./scripts/versioning.sh
+        run: |
+          set +e
+          VERSION=$(python scripts/semver_tool/semver_tool.py -e dev di-framework)
+          CODE=$?
+          set -e
+          
+          if [ "$CODE" -eq 0 ]; then
+            echo "release_needed=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "release_needed=false" >> $GITHUB_OUTPUT
+          fi
+          echo $GITHUB_OUTPUT
+          echo $VERSION
 
       - run: git status
       - run: echo ${{ steps.versioning.outputs.version }}
@@ -52,7 +65,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: versioning
-    if: ${{ needs.versioning.outputs.release_needed }} -eq true
+    if: ${{ needs.versioning.outputs.release_needed }} == true
 
     steps:
       - name: Checkout
@@ -95,7 +108,7 @@ jobs:
     needs:
       - versioning
       - build
-    if: ${{ needs.versioning.outputs.release_needed }} -eq true
+    if: ${{ needs.versioning.outputs.release_needed }} == true
 
     steps:
       - name: Checkout
