@@ -103,6 +103,9 @@ jobs:
     needs:
       - versioning
       - build
+    permissions:
+      contents: write
+      packages: write
     if: needs.versioning.outputs.release_needed == 'true'
 
     steps:
@@ -127,8 +130,6 @@ jobs:
           name: di-framework_pom
           path: di-framework/
 
-      - run: git status
-
       - name: Commit version, release notes and updated pom.xml
         run: |
           git config user.name "github-actions"
@@ -148,8 +149,6 @@ jobs:
         with:
           name: di-framework_jar
           path: ./
-
-      - run: git status -uall
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
