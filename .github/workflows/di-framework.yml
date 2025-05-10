@@ -158,6 +158,7 @@ jobs:
           tag_name: di-framework_${{ needs.versioning.outputs.version }}
           name: di-framework v${{ needs.versioning.outputs.version }}
           body_path: release_notes/di-framework.md
-          files: di-framework_${{ needs.versioning.outputs.version }}.jar
+          files: di-framework-${{ needs.versioning.outputs.version }}.jar
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
