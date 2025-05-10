@@ -2,9 +2,9 @@ name: Release di-framework maven package
 
 on:
   workflow_dispatch:
-#  push:
-#    branches:
-#      - master
+  push:
+    branches:
+      - di-framework
 #    paths:
 #      - 'di-framework/**'
 #      - '.github/workflows/di-framework.yml'
@@ -27,7 +27,7 @@ jobs:
 
       - name: Determine version
         id: versioning
-        run: python scripts/semver_tool/semver_tool.py -e dev di-framework
+        run: python3 scripts/semver_tool/semver_tool.py -e dev di-framework
 
       - run: git status
       - run: echo ${{ steps.versioning.outputs.version }}
