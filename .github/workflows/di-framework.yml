@@ -40,6 +40,8 @@ jobs:
             echo "release_needed=false" >> $GITHUB_OUTPUT
           fi
 
+      - run: git status
+
       - name: Upload version file
         uses: actions/upload-artifact@v4
         with:
@@ -80,6 +82,10 @@ jobs:
       - name: Build project
         working-directory: di-framework
         run: mvn clean package
+
+      - run: git status
+
+      - run: ls -al di-framework/target
 
       - name: Upload updated pom.xml
         uses: actions/upload-artifact@v4
