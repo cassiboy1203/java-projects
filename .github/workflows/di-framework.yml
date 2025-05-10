@@ -146,7 +146,7 @@ jobs:
           name: di-framework_jar
           path: ./
 
-      - run: git status
+      - run: git status -uall
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
