@@ -35,7 +35,7 @@ jobs:
         id: versioning
         run: |
           set +e
-          VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ github.event.inputs.env }} ${{ github.event.inputs.project }})
+          VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ inputs.env }} ${{ inputs.project }})
           CODE=$?
           set -e
           
@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release_notes
-          path: release_notes/${{ github.event.inputs.project }}.md
+          path: release_notes/${{ inputs.project }}.md
 
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -84,26 +84,26 @@ jobs:
           java-version: '21'
 
       - name: Update maven version
-        working-directory: ${{ github.event.inputs.project }}
+        working-directory: ${{ inputs.project }}
         run: |
           mvn versions:set -DnewVersion=${{ needs.versioning.outputs.version }}
           mvn versions:commit
 
       - name: Build project
-        working-directory: ${{ github.event.inputs.project }}
+        working-directory: ${{ inputs.project }}
         run: mvn clean package
 
       - name: Upload updated pom.xml
         uses: actions/upload-artifact@v4
         with:
           name: pom
-          path: ${{ github.event.inputs.project }}/pom.xml
+          path: ${{ inputs.project }}/pom.xml
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
           name: jar
-          path: ${{ github.event.inputs.project }}/target/*.jar
+          path: ${{ inputs.project }}/target/*.jar
 
   release:
     runs-on: ubuntu-latest
@@ -141,21 +141,25 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: pom
-          path: ${{ github.event.inputs.project }}/
+          path: ${{ inputs.project }}/
+
+      - name: Add release notes to git
+        if: inputs.env == 'main'
+        run: git add release_notes/${{ inputs.project }}.md
 
       - name: Commit version, release notes and updated pom.xml
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add version.yaml release_notes/${{ github.event.inputs.project }}.md ${{ github.event.inputs.project }}/pom.xml
-          git commit -m "chore(${{ github.event.inputs.project }}): release new version"
+          git add version.yaml ${{ inputs.project }}/pom.xml
+          git commit -m "chore(${{ inputs.project }}): release new version"
           git push
 
       - name: Create tag
         run: |
           VERSION=${{ needs.versioning.outputs.version }}
-          git tag ${{ github.event.inputs.project }}_$VERSION
-          git push origin ${{ github.event.inputs.project }}_$VERSION
+          git tag ${{ inputs.project }}_$VERSION
+          git push origin ${{ inputs.project }}_$VERSION
 
       - name: Download jar
         uses: actions/download-artifact@v4
@@ -166,18 +170,19 @@ jobs:
       - name: Determine prerelease
         id: prerelease
         run: |
-          if [ ${{ github.event.inputs.env }} -eq "main" ]; then
+          if [ ${{ inputs.env }} -eq "main" ]; then
             echo "prerelease=false" >> $GITHUB_OUTPUT
           else
             echo "prerelease=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.project }}_${{ needs.versioning.outputs.version }}
-          name: ${{ github.event.inputs.project }} v${{ needs.versioning.outputs.version }}
+          tag_name: ${{ inputs.project }}_${{ needs.versioning.outputs.version }}
+          name: ${{ inputs.project }} v${{ needs.versioning.outputs.version }}
           body_path: release_notes.md
-          files: ${{ github.event.inputs.project }}-${{ needs.versioning.outputs.version }}.jar
+          files: ${{ inputs.project }}-${{ needs.versioning.outputs.version }}.jar
           prerelease: ${{ steps.prerelease.outputs.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

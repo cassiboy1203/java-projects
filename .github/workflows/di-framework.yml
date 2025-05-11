@@ -18,7 +18,7 @@ on:
     paths:
       - 'di-framework/**'
       - '.github/workflows/di-framework.yml'
-      - '.github/workflows/templates/java_release.yml'
+      - '.github/workflows/java_release_template.yml'
 
 jobs:
   determine_env:
@@ -29,16 +29,20 @@ jobs:
         id: environment
         run: |
           if [ "${{ github.event_name }}" -eq "workflow_dispatch" ]; then
-            echo "env="${{ github.event.inputs.env }}" >> $GITHUB_ENV
+            echo "env=${{ github.event.inputs.env }}" >> $GITHUB_ENV
           else
             echo "env=dev" >> $GITHUB_ENV
+          fi
 
     outputs:
       env: ${{ env.env }}
 
   release:
+    permissions:
+      contents: write
+      packages: write
     needs: determine_env
-    uses: .github/workflows/templates/java_release.yml@master
+    uses: ./.github/workflows/java_release_template.yml
     with:
       env: ${{ needs.determine_env.outputs.env }}
       project: 'di-framework'
