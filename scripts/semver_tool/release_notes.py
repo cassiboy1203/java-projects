@@ -1,4 +1,4 @@
-def generate_release_notes(commits, version):
+def generate_release_notes(commits, version, project):
     breaking = []
     features = []
     fixes = []
@@ -13,7 +13,7 @@ def generate_release_notes(commits, version):
             fixes.append(commit)
         else:
             others.append(commit)
-    notes = [f"## {version}\n"]
+    notes = [f"## {project} v{version}\n"]
 
     if breaking:
         notes.append("### ⚠️ Breaking Changes\n" + "\n".join(f"- {c}" for c in breaking))
@@ -30,3 +30,11 @@ def generate_release_notes(commits, version):
 def save_release_notes(release_notes, file="release_notes.md"):
     with open(file, "w") as f:
         f.write(release_notes)
+
+
+def read_release_notes(project):
+    try:
+        with open(f"release_notes/{project}.md", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
