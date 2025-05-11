@@ -90,6 +90,8 @@ class Version(object):
 
     def __str__(self):
         if self.env != "main":
+            if self.build == 0:
+                return f"{self.major}.{self.minor}.{self.patch}-{self.env}_1"
             return f"{self.major}.{self.minor}.{self.patch}-{self.env}_{self.build}"
         else:
             if self.build > 1:
