@@ -6,7 +6,7 @@
 
     <groupId>com.yukikase</groupId>
     <artifactId>di-framework</artifactId>
-    <version>1.0</version>
+    <version>0.1.0-dev_0</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
