@@ -38,7 +38,7 @@ jobs:
 
   release:
     needs: determine_env
-    uses: ./.github/workflows/templates/java_release.yml
+    uses: .github/workflows/templates/java_release.yml
     with:
       env: ${{ needs.determine_env.outputs.env }}
       project: 'di-framework'
