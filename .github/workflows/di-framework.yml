@@ -2,152 +2,43 @@ name: Release di-framework maven package
 
 on:
   workflow_dispatch:
-#  push:
-#    branches:
-#      - master
-#    paths:
-#      - 'di-framework/**'
-#      - '.github/workflows/di-framework.yml'
+    inputs:
+      env:
+        default: 'main'
+        required: true
+        type: string
+        options:
+          - 'main'
+          - 'rc'
+          - 'dev'
+        description: The environment type pipeline is run in
+  push:
+    branches:
+      - master
+    paths:
+      - 'di-framework/**'
+      - '.github/workflows/di-framework.yml'
+      - '.github/workflows/templates/java_release.yml'
 
 jobs:
-  versioning:
+  determine_env:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install Python dependencies
-        run: pip install -r scripts/semver_tool/requirements.txt
-
-      - name: Determine version
-        id: versioning
+      - name: Determine environment
+        id: environment
         run: |
-          set +e
-          VERSION=$(python scripts/semver_tool/semver_tool.py -e dev di-framework)
-          CODE=$?
-          set -e
-          
-          if [ "$CODE" -eq 0 ]; then
-            echo "release_needed=true" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" -eq "workflow_dispatch" ]; then
+            echo "env="${{ github.event.inputs.env }}" >> $GITHUB_ENV
           else
-            echo "release_needed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload version file
-        uses: actions/upload-artifact@v4
-        with:
-          name: version
-          path: version.yaml
-
-      - name: Upload release notes
-        uses: actions/upload-artifact@v4
-        with:
-          name: release_notes
-          path: release_notes.md
+            echo "env=dev" >> $GITHUB_ENV
 
     outputs:
-      version: ${{ steps.versioning.outputs.version }}
-      release_needed: ${{ steps.versioning.outputs.release_needed }}
-
-  build:
-    runs-on: ubuntu-latest
-    needs: versioning
-    if: ${{ needs.versioning.outputs.release_needed }} -eq true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Update maven version
-        working-directory: di-framework
-        run: |
-          mvn versions:set -DnewVersion=${{ needs.versioning.outputs.version }}
-          mvn versions:commit
-
-      - name: Build project
-        working-directory: di-framework
-        run: mvn clean package
-
-      - name: Upload updated pom.xml
-        uses: actions/upload-artifact@v4
-        with:
-          name: di-framework_pom
-          path: di-framework/pom.xml
-
-      - name: Upload jar
-        uses: actions/upload-artifact@v4
-        with:
-          name: di-framework_jar
-          path: di-framework/target/*.jar
+      env: ${{ env.env }}
 
   release:
-    runs-on: ubuntu-latest
-    needs:
-      - versioning
-      - build
-    if: ${{ needs.versioning.outputs.release_needed }} -eq true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download version file
-        uses: actions/download-artifact@2
-        with:
-          name: version
-          path: version.yaml
-
-      - name: Download release notes
-        uses: actions/download-artifact@2
-        with:
-          name: release_notes
-          path: release_notes/di-framework.md
-
-      - name: Download pom.xml
-        uses: actions/download-artifact@2
-        with:
-          name: di-framework_pom
-          path: di-framework/pom.xml
-
-      - name: Commit version, release notes and updated pom.xml
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add version.yaml release_notes/di-framework.md di-framework/pom.xml
-          git commit -m "chore(di-framework): release new version"
-          git push
-
-      - name: Create tag
-        run: |
-          VERSION=${{ needs.versioning.outputs.version }}
-          git tag di-framework_$VERSION
-          git push origin di-framework_$VERSION
-
-      - name: Download jar
-        uses: actions/download-artifact@2
-        with:
-          name: di-framework_jar
-          path: di-framework_${{ needs.versioning.outputs.version }}.jar
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: di-framework_${{ needs.versioning.outputs.version }}
-          name: di-framework v${{ needs.versioning.outputs.version }}
-          body_path: release_notes/di-framework.md
-          files: di-framework_${{ needs.versioning.outputs.version }}.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    needs: determine_env
+    uses: .github/workflows/templates/java_release.yml@master
+    with:
+      env: ${{ needs.determine_env.outputs.env }}
+      project: 'di-framework'
