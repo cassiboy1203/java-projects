@@ -1,4 +1,4 @@
-name: Release di-framework maven package
+name: Release yukikase-lib maven package
 
 on:
   workflow_dispatch:
