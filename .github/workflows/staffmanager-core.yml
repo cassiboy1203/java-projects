@@ -1,0 +1,53 @@
+name: Release staffmanager-core maven package
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        default: 'main'
+        required: true
+        type: string
+        options:
+          - 'main'
+          - 'rc'
+          - 'dev'
+        description: The environment type pipeline is run in
+      version_override:
+        required: false
+        type: string
+        description: Override the automatically generated version.
+  push:
+    branches:
+      - master
+    paths:
+      - 'staffmanager-core/**'
+      - '.github/workflows/staffmanager-core.yml'
+      - '.github/workflows/java_release_template.yml'
+
+jobs:
+  determine_env:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine environment
+        id: environment
+        run: |
+          if [ "${{ github.event_name }}" -eq "workflow_dispatch" ]; then
+            echo "env=${{ github.event.inputs.env }}" >> $GITHUB_ENV
+          else
+            echo "env=dev" >> $GITHUB_ENV
+          fi
+
+    outputs:
+      env: ${{ env.env }}
+
+  release:
+    permissions:
+      contents: write
+      packages: write
+    needs: determine_env
+    uses: ./.github/workflows/java_release_template.yml
+    with:
+      env: ${{ needs.determine_env.outputs.env }}
+      project: 'staffmanager-core'
+      version_override: ${{ inputs.version_override }}

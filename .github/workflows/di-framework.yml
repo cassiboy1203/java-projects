@@ -50,3 +50,4 @@ jobs:
     with:
       env: ${{ needs.determine_env.outputs.env }}
       project: 'di-framework'
+      version_override: ${{ inputs.version_override }}

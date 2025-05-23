@@ -1,0 +1,75 @@
+name: StaffmanagerCore
+version: '0.0.0'
+main: com.yukikase.staffmanager.core.StaffManagerCore
+api-version: '1.21'
+authors:
+  - ゆきかせ
+depend:
+  - YukikaseLib
+commands:
+  staff:
+    description: Enters staff mode
+    permission: staffmanager.staff
+  gamemode:
+    description: Allows you to change your gamemode
+    permission: staffmanager.staff.gamemode
+    aliases:
+      - 'gm'
+      - 'gmc'
+      - 'gms'
+      - 'gmsp'
+      - 'gma'
+  fly:
+    description: Toggle flight
+    permission: staffmanager.staff.fly
+  vanish:
+    desctiption: Toggles vanish
+    permission: staffmanager.staff.vanish.toggle
+
+permissions:
+  staffmanager.staff:
+    description: Allows the player to enter staff mode with /staff
+  staffmanager.staff.vanish:
+    description: Makes the player invisible in staff mode to players without de see invisible permission
+  staffmanager.staff.fly:
+    description: Allows the player to fly in staff mode
+  staffmanager.staff.god:
+    description: Give the player godmode in staff mode
+  staffmanager.staff.see.invisible:
+    description: Allows the player to see invisible players in staff mode
+    default: not op
+  staffmanager.see.invisible:
+    description: Allows the player to see invisible players outside of staff mode
+    default: not op
+    children:
+      staffmanager.staff.see.invisible: true
+  staffmanager.staff.gamemode:
+    description: Allows the player to change gamemode while in staff mode
+  staffmanager.gamemode:
+    description: Allows the player to change gamemode even while outside staff mode
+    children:
+      staffmanager.staff.gamemode: true
+  staffmanager.staff.gamemode.other:
+    description: Allows the player to change another players gamemode while in staff mode
+  staffmanager.gamemode.other:
+    description: Allows the player to change another players gamemode even while outside staff mode
+    children:
+      staffmanager.staff.gamemode.other: true
+  staffmanager.fly:
+    description: Allows the player to toggle flight outside of staff mode
+    childern:
+      staffmanager.staff.fly: true
+  staffmanager.staff.fly.other:
+    description: Allows the player to toggle flight of another player in staff mode
+  staffmanager.fly.other:
+    description: Allows the player to toggle flight of another player outside of staff mode
+    childern:
+      staffmanger.staff.fly.other: true
+  staffmanager.staff.vanish.toggle:
+    description: Allows the player to toggle vanish inside staff mode.
+    childern:
+      staffmanager.staff.vanish: true
+  staffmanager.vanish.toggle:
+    description: Allows the player to toggle banish outside of staff mode.
+    childern:
+      staffmanager.staff.vanish.toggle: true
