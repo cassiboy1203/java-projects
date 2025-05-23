@@ -12,6 +12,10 @@ on:
         required: true
         type: string
         description: The project to run the pipeline on
+      version_override:
+        required: false
+        type: string
+        description: Override the automatically generated version.
 
 jobs:
   versioning:
@@ -35,7 +39,11 @@ jobs:
         id: versioning
         run: |
           set +e
-          VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ inputs.env }} ${{ inputs.project }})
+          if [ -z ${{ inputs.version_override }} ]; then
+            VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ inputs.env }} ${{ inputs.project }})
+          else
+            VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ inputs.env }} -o ${{ inputs.version_override }} ${{ inputs.project }})
+          fi
           CODE=$?
           set -e
           

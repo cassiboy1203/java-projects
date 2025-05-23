@@ -12,6 +12,10 @@ on:
           - 'rc'
           - 'dev'
         description: The environment type pipeline is run in
+      version_override:
+        required: false
+        type: string
+        description: Override the automatically generated version.
   push:
     branches:
       - master
