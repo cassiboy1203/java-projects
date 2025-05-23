@@ -31,7 +31,7 @@ class Version(object):
     patch: int
     build: int
     env: str
-    main : Self
+    main: Self
 
     def __init__(self, major=0, minor=0, patch=0, build=0, env="main", main_version=Self):
         self.major = major
@@ -74,7 +74,12 @@ class Version(object):
         env_end_index = split[2].find("_")
         env = ""
         if patch_end_index != -1:
-            env = split[2][patch_end_index + 1:env_end_index]
+            env_dev = split[2][patch_end_index + 1:]
+            end = env_dev.find("-")
+            if end != -1:
+                env = env_dev[:end]
+            else:
+                env = env_dev
         else:
             if env_end_index != -1:
                 patch_end_index = env_end_index
