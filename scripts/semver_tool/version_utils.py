@@ -75,7 +75,7 @@ class Version(object):
         env = ""
         if patch_end_index != -1:
             env_dev = split[2][patch_end_index + 1:]
-            end = env_dev.find("-")
+            end = env_dev.find("_")
             if end != -1:
                 env = env_dev[:end]
             else:
