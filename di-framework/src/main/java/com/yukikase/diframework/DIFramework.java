@@ -1,9 +1,11 @@
 package com.yukikase.diframework;
 
+
 public class DIFramework {
-    public Injector start(Class<?> mainClass) {
-        var injector = new Injector();
-        injector.start(mainClass);
+
+    public static DefaultInjector start(Class<?>... mainClasses) {
+        var injector = new DefaultInjector();
+        injector.start(mainClasses);
 
         return injector;
     }
