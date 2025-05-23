@@ -172,17 +172,18 @@ def get_current_version(project, env):
 
 
 def write_new_version(version: Version, project):
-    with io.open(f"version.yaml", "w+") as stream:
-        version_yaml = yaml.safe_load(stream)
+    if version.env not in envs.keys():
+        raise Exception(f"Environment {version.env} does not exist.")
 
-        if version.env not in envs.keys():
-            raise Exception(f"Environment {version.env} does not exist.")
+    try:
+        with io.open(f"./version.yaml", "r") as f:
+            version_yaml = yaml.safe_load(f.read()) or {}
+    except FileNotFoundError:
+        version_yaml = {}
 
-        if version_yaml is None:
-            version_yaml = {}
+    if version.env not in version_yaml:
+        version_yaml[version.env] = {}
+    version_yaml[version.env][project] = str(version)
 
-        version_yaml.update({f'{version.env}': {
-            f'{project}': str(version),
-        }})
-
+    with io.open(f"./version.yaml", "w") as stream:
         stream.write(yaml.dump(version_yaml))
