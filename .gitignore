@@ -83,3 +83,5 @@ node_modules
 target
 
 **/**.iml
+
+**/**.jar

@@ -1,4 +1,4 @@
-name: Release di-framework maven package
+name: Release staffmanager-core maven package
 
 on:
   workflow_dispatch:
@@ -20,8 +20,8 @@ on:
     branches:
       - master
     paths:
-      - 'di-framework/**'
-      - '.github/workflows/di-framework.yml'
+      - 'staffmanager-core/**'
+      - '.github/workflows/staffmanager-core.yml'
       - '.github/workflows/java_release_template.yml'
 
 jobs:
@@ -49,5 +49,5 @@ jobs:
     uses: ./.github/workflows/java_release_template.yml
     with:
       env: ${{ needs.determine_env.outputs.env }}
-      project: 'di-framework'
+      project: 'staffmanager-core'
       version_override: ${{ inputs.version_override }}
