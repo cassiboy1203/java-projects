@@ -6,7 +6,7 @@
 
     <groupId>com.yukikase</groupId>
     <artifactId>yukikase-lib</artifactId>
-    <version>0.0.0</version>
+    <version>0.1.0-dev_1</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
