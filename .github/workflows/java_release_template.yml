@@ -100,6 +100,10 @@ jobs:
           mvn versions:set -DnewVersion=${{ needs.versioning.outputs.version }}
           mvn versions:commit
 
+
+      - name: Authenticate to GitHub Packages
+        run: echo "<settings><servers><server><id>3-github</id><username>${{ github.actor }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
+
       - name: Build project
         working-directory: ${{ inputs.project }}
         run: mvn --batch-mode clean deploy
