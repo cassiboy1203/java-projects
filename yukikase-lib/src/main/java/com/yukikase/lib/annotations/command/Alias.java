@@ -1,12 +1,12 @@
 package com.yukikase.lib.annotations.command;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
+@Repeatable(Aliases.class)
 public @interface Alias {
-    String value() default "";
+    String alias() default "";
+
+    String subcommand() default "";
 }

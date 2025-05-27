@@ -1,9 +1,9 @@
 package com.yukikase.lib.command;
 
 import com.yukikase.lib.IPermissionHandler;
+import com.yukikase.lib.YukikasePlugin;
 import com.yukikase.lib.interfaces.ICommand;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,14 +16,14 @@ class CommandRegisterTest {
     private CommandRegister sut;
 
     private IPermissionHandler permissionHandler;
-    private JavaPlugin plugin;
+    private YukikasePlugin plugin;
 
     @BeforeEach
     void setup() {
         sut = new CommandRegister();
 
         permissionHandler = mock(IPermissionHandler.class);
-        plugin = mock(JavaPlugin.class);
+        plugin = mock(YukikasePlugin.class);
     }
 
     @Test

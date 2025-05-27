@@ -9,7 +9,6 @@ services:
       - "5005:5005"
     stdin_open: true
     tty: true
-    network_mode: host
 
 volumes:
   server:

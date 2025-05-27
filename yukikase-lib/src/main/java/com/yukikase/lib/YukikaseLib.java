@@ -8,8 +8,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 @Singleton
 public class YukikaseLib extends JavaPlugin {
 
-    public <T extends JavaPlugin> DefaultInjector registerPlugin(JavaPlugin plugin) {
+    public DefaultInjector registerPlugin(YukikasePlugin plugin) {
         var injector = DIFramework.start(plugin.getClass(), YukikaseLib.class);
+        injector.registerSingleton(YukikasePlugin.class, plugin);
         injector.registerSingleton(JavaPlugin.class, plugin);
         injector.runConfigurations();
         return injector;
