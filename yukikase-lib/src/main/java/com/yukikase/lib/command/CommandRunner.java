@@ -1,8 +1,11 @@
 package com.yukikase.lib.command;
 
 import com.yukikase.lib.IPermissionHandler;
+import com.yukikase.lib.PermissionHandler;
+import com.yukikase.lib.YukikasePlugin;
+import com.yukikase.lib.annotations.Permission;
 import com.yukikase.lib.annotations.command.Alias;
-import com.yukikase.lib.annotations.command.SubCommand;
+import com.yukikase.lib.annotations.command.Aliases;
 import com.yukikase.lib.exceptions.InvalidCommandException;
 import com.yukikase.lib.exceptions.UnauthorizedException;
 import com.yukikase.lib.interfaces.ICommand;
@@ -18,12 +21,14 @@ import java.util.*;
 class CommandRunner implements CommandExecutor {
     private final ICommand command;
     private final IPermissionHandler permissionHandler;
+    private final YukikasePlugin plugin;
     private CommandNode rootCommand;
 
-    CommandRunner(ICommand command, IPermissionHandler permissionHandler) {
+    CommandRunner(ICommand command, IPermissionHandler permissionHandler, YukikasePlugin plugin) {
         this.command = command;
         this.permissionHandler = permissionHandler;
         this.rootCommand = new CommandNode("", "", null, true);
+        this.plugin = plugin;
 
         registerCommands();
     }
@@ -32,21 +37,33 @@ class CommandRunner implements CommandExecutor {
         Queue<CommandNode> commands = new LinkedList<>();
 
         for (var method : command.getClass().getMethods()) {
-            var alias = command.name();
-            var subCommand = "";
-            if (method.isAnnotationPresent(Alias.class)) {
-                alias = method.getAnnotation(Alias.class).value();
-            }
-            if (method.isAnnotationPresent(SubCommand.class)) {
-                subCommand = method.getAnnotation(SubCommand.class).value();
+            Alias[] aliases = null;
+            if (method.isAnnotationPresent(Aliases.class)) {
+                aliases = method.getAnnotationsByType(Alias.class);
+            } else if (method.isAnnotationPresent(Alias.class)) {
+                aliases = method.getAnnotationsByType(Alias.class);
             }
 
-            if (alias.equals(command.name()) && subCommand.isEmpty() && !method.getName().equals("onCommand")) {
-                continue;
-            }
+            if (aliases != null) {
+                for (var alias : aliases) {
+                    if (alias.alias().equals(command.name()) && alias.subcommand().isEmpty() && !method.getName().equals("onCommand")) {
+                        continue;
+                    }
 
-            var node = new CommandNode(alias, subCommand, method);
-            commands.add(node);
+                    var name = alias.alias();
+
+                    if (alias.alias().isEmpty())
+                        name = command.name();
+
+                    var node = new CommandNode(name, alias.subcommand(), method);
+                    commands.add(node);
+                }
+            } else {
+                if (method.getName().equals("onCommand")) {
+                    var node = new CommandNode(command.name(), "", method);
+                    commands.add(node);
+                }
+            }
         }
 
         Map<String, List<CommandNode>> subCommands = new HashMap<>();
@@ -77,6 +94,7 @@ class CommandRunner implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] args) {
+        this.plugin.useClassLoader();
         var commandNode = rootCommand.getNodeToExecute(commandName, args);
         try {
             return runCommand(commandSender, command, Arrays.copyOfRange(args, commandNode.getDepth(), args.length), commandNode.getMethod());
@@ -88,7 +106,22 @@ class CommandRunner implements CommandExecutor {
 
     private boolean runCommand(CommandSender commandSender, Command command, String[] args, Method method) throws InvocationTargetException, IllegalAccessException {
         if (commandSender instanceof Player player) {
-            if (!player.hasPermission(this.permissionHandler.getPermissionOffMethod(this.command.getClass(), method)))
+            boolean checkForPermission = true;
+
+            if (this.command.getClass().isAnnotationPresent(Permission.class)) {
+                var permission = this.command.getClass().getAnnotation(Permission.class);
+                if (permission.handler().equals(PermissionHandler.MANUAL))
+                    checkForPermission = false;
+            }
+
+            if (method.isAnnotationPresent(Permission.class)) {
+                var permission = method.getAnnotation(Permission.class);
+
+                if (permission.handler().equals(PermissionHandler.MANUAL))
+                    checkForPermission = false;
+            }
+
+            if (checkForPermission && !this.permissionHandler.playerHasPermission(player, method))
                 throw new UnauthorizedException(UnauthorizedException.PLAYER_UNAUTHORIZED_SUB_COMMAND);
         }
 

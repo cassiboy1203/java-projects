@@ -2,15 +2,15 @@ package com.yukikase.staffmanager.core;
 
 import com.yukikase.diframework.anotations.Singleton;
 import com.yukikase.lib.YukikaseLib;
-import com.yukikase.lib.annotations.PermissionPrefix;
+import com.yukikase.lib.YukikasePlugin;
+import com.yukikase.lib.annotations.Permission;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
 
 @Singleton
-@PermissionPrefix(StaffManagerCore.PERMISSION_BASE)
-public class StaffManagerCore extends JavaPlugin {
+@Permission(StaffManagerCore.PERMISSION_BASE)
+public class StaffManagerCore extends YukikasePlugin {
     public static final String PERMISSION_BASE = "staffmanager";
     public static final String NAME = "StaffManagerCore";
 

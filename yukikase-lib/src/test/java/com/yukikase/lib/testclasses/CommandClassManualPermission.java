@@ -1,20 +1,20 @@
 package com.yukikase.lib.testclasses;
 
+import com.yukikase.lib.PermissionHandler;
 import com.yukikase.lib.annotations.Permission;
 import com.yukikase.lib.interfaces.ICommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-@Permission("class")
-public class CommandClassSingleMethod implements ICommand {
+@Permission(handler = PermissionHandler.MANUAL)
+public class CommandClassManualPermission implements ICommand {
     @Override
     public String name() {
-        return "command";
+        return "manual";
     }
 
     @Override
-    @Permission("method")
     public boolean onCommand(CommandSender sender, Command command, String[] args) {
-        return true;
+        return false;
     }
 }
