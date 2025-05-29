@@ -40,7 +40,6 @@ jobs:
     needs: get_changed_projects
     if: ${{ needs.get_changed_projects.outputs.yukikase-lib }}
     uses: ./.github/workflows/versioning_template.yml
-    id: version
     with:
       project: yukikase-lib
       env: 'dev'
@@ -49,7 +48,6 @@ jobs:
     needs: get_changed_projects
     if: ${{ needs.get_changed_projects.outputs.staffmanager-core }}
     uses: ./.github/workflows/versioning_template.yml
-    id: version
     with:
       project: staffmanager-core
       env: 'dev'
