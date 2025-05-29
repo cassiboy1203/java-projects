@@ -43,7 +43,7 @@ jobs:
       - name: update version of di-framework
         id: di-framework
         if: ${{ needs.get_changed_projects.outputs.di-framework }}
-        uses: .github/workflows/versioning_template.yml
+        uses: ./.github/workflows/versioning_template.yml
         with:
           project: di-framework
           env: 'dev'
@@ -51,7 +51,7 @@ jobs:
       - name: update version of yukikase-lib
         id: yukikase-lib
         if: ${{ needs.get_changed_projects.outputs.yukikase-lib }}
-        uses: .github/workflows/versioning_template.yml
+        uses: ./.github/workflows/versioning_template.yml
         with:
           project: yukikase-lib
           env: 'dev'
@@ -59,7 +59,7 @@ jobs:
       - name: update version of staffmanager.core
         id: staffmanager-core
         if: ${{ needs.get_changed_projects.outputs.staffmanager-core }}
-        uses: .github/workflows/versioning_template.yml
+        uses: ./.github/workflows/versioning_template.yml
         with:
           project: staffmanager.core
           env: 'dev'
@@ -149,7 +149,7 @@ jobs:
 
       - name: Release di framework
         if: ${{ needs.update_versions.outputs.di-framework-version }}
-        uses: .github/workflows/release_template.yml
+        uses: ./.github/workflows/release_template.yml
         with:
           env: 'dev'
           version: ${{ needs.update_versions.outputs.di-framework-version }}
@@ -157,7 +157,7 @@ jobs:
 
       - name: Release yukikase lib
         if: ${{ needs.update_versions.outputs.yukikase-lib-version }}
-        uses: .github/workflows/release_template.yml
+        uses: ./.github/workflows/release_template.yml
         with:
           env: 'dev'
           version: ${{ needs.update_versions.outputs.yukikase-lib-version }}
@@ -165,7 +165,7 @@ jobs:
 
       - name: Release staffmanager core
         if: ${{ needs.update_versions.outputs.staffmanager-core-version }}
-        uses: .github/workflows/release_template.yml
+        uses: ./.github/workflows/release_template.yml
         with:
           env: 'dev'
           version: ${{ needs.update_versions.outputs.staffmanager-core-version }}
