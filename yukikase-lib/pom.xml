@@ -4,26 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.yukikase</groupId>
     <artifactId>yukikase-lib</artifactId>
     <version>0.1.2-dev_1</version>
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <repositories>
-        <repository>
-            <id>2-spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
-        <repository>
-            <id>3-github</id>
-            <url>https://maven.pkg.github.com/cassiboy1203/java-projects</url>
-        </repository>
-    </repositories>
+    <parent>
+        <artifactId>java_projects</artifactId>
+        <groupId>com.yukikase</groupId>
+        <version>1.0</version>
+    </parent>
 
     <build>
         <plugins>
@@ -57,33 +44,10 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.21.1-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.yukikase</groupId>
             <artifactId>di-framework</artifactId>
-            <version>0.1.0-dev_2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.11.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>5.11.0</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>3-github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/cassiboy1203/java-projects</url>
-        </repository>
-    </distributionManagement>
 </project>

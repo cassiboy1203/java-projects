@@ -1,0 +1,98 @@
+name: versioning_template.yml
+on:
+  workflow_call:
+    inputs:
+      env:
+        default: "dev"
+        required: true
+        type: string
+        description: The environment type pipeline is run in
+      project:
+        required: true
+        type: string
+        description: The project to run the pipeline on
+      version_override:
+        required: false
+        type: string
+        description: Override the automatically generated version.
+    outputs:
+      version:
+        description: new version of the project.
+        value: ${{ jobs.versioning.outputs.version }}
+      needs-release:
+        description: is true when a new release needs to be build for this project.
+        value: ${{ jobs.versioning.outputs.release_needed }}
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install -r scripts/semver_tool/requirements.txt
+
+      - name: Determine version
+        id: versioning
+        run: |
+          set +e
+          if [ -z ${{ inputs.version_override }} ]; then
+            VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ inputs.env }} ${{ inputs.project }})
+          else
+            VERSION=$(python scripts/semver_tool/semver_tool.py -e ${{ inputs.env }} -o ${{ inputs.version_override }} ${{ inputs.project }})
+          fi
+          CODE=$?
+          set -e
+          
+          if [ "$CODE" -eq 0 ]; then
+            echo "release_needed=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "release_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload version file
+        uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: version.yaml
+
+      - name: Upload new version release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.project }}_version_release_notes
+          path: release_notes.md
+
+      - name: Upload main release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.project }}_release_notes
+          path: release_notes/${{ inputs.project }}.md
+
+    outputs:
+      version: ${{ steps.versioning.outputs.version }}
+      release_needed: ${{ steps.versioning.outputs.release_needed }}
+
+  update_maven_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update maven version
+        working-directory: ${{ inputs.project }}
+        run: |
+          mvn versions:set -DnewVersion=${{ needs.versioning.outputs.version }}
+          mvn versions:commit
+
+      - name: Upload updated pom.xml
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.project }}-pom
+          path: ${{ inputs.project }}/pom.xml

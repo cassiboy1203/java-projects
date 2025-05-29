@@ -1,0 +1,8 @@
+di-framework:
+
+yukikase-lib:
+  - di-framework
+
+staffmanager-core:
+  - di-framework
+  - yukikase-lib

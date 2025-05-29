@@ -1,0 +1,102 @@
+name: Release template
+
+on:
+  workflow_call:
+    inputs:
+      env:
+        default: 'main'
+        required: true
+        type: string
+        description: The environment type pipeline is run in
+      project:
+        required: true
+        type: string
+        description: The project to run the pipeline on
+      version:
+        required: true
+        type: string
+        description: The version of the project to be released
+      path:
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download version release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.project }}_version_release_notes
+          path: ${{ env.path }}
+
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.project }}_release_notes
+          path: release_notes/
+
+      - name: Get path
+        run: |
+          if [ -z ${{ inputs.path }} ]; then
+            echo "path=${{ inputs.project }}" >> $GITHUB_ENV
+          else
+            echo "path=${{ inputs.path }}" >> $GITHUB_ENV
+          fi
+
+      - name: Download pom.xml
+        uses: actions/download-artifact@v4
+        with:
+          name: pom
+          path: ${{ env.path }}/
+
+      - name: Add release notes to git
+        if: inputs.env == 'main'
+        run: git add release_notes/${{ inputs.project }}.md
+
+      - name: Commit version, release notes and updated pom.xml
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add ${{ env.path }}/pom.xml
+          git commit -m "chore(${{ inputs.project }}): release new version"
+          git push
+
+      - name: Create tag
+        run: |
+          VERSION=${{ needs.versioning.outputs.version }}
+          git tag ${{ inputs.project }}_$VERSION
+          git push origin ${{ inputs.project }}_$VERSION
+
+      - name: Download jar
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{inputs.project}}-jar
+          path: ${{ env.path }}/target/
+
+      - name: Determine prerelease
+        id: prerelease
+        run: |
+          if [ ${{ inputs.env }} -eq "main" ]; then
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.project }}_${{ needs.versioning.outputs.version }}
+          name: ${{ inputs.project }} v${{ needs.versioning.outputs.version }}
+          body_path: ${{ env.path }}/release_notes.md
+          files: ${{ env.path }}/target/${{ inputs.project }}-${{ needs.versioning.outputs.version }}.jar
+          prerelease: ${{ steps.prerelease.outputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

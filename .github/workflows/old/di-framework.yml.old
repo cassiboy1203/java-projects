@@ -1,4 +1,4 @@
-name: Release yukikase-lib maven package
+name: Release di-framework maven package
 
 on:
   workflow_dispatch:
@@ -16,13 +16,7 @@ on:
         required: false
         type: string
         description: Override the automatically generated version.
-  push:
-    branches:
-      - master
-    paths:
-      - 'yukikase-lib/**'
-      - '.github/workflows/yukikase-lib.yml'
-      - '.github/workflows/java_release_template.yml'
+  workflow_call:
 
 jobs:
   determine_env:
@@ -46,8 +40,10 @@ jobs:
       contents: write
       packages: write
     needs: determine_env
-    uses: ./.github/workflows/java_release_template.yml
+    uses: release_template.yml
     with:
       env: ${{ needs.determine_env.outputs.env }}
-      project: 'yukikase-lib'
+      project: 'di-framework'
       version_override: ${{ inputs.version_override }}
+
+  update-dependant-projects:
