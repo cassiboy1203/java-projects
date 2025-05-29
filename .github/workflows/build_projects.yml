@@ -28,53 +28,58 @@ jobs:
           echo "yukikase-lib=$(git diff --quiet ${{ github.event.after }} ${{ github.event.before }} -- yukikase-lib || echo 1)" >> $GITHUB_OUTPUT
           echo "staffmanager-core=$(git diff --quiet ${{ github.event.after }} ${{ github.event.before }} -- staffmananger-core || echo 1)" >> $GITHUB_OUTPUT
 
+  update_version_di-framework:
+    needs: get_changed_projects
+    if: ${{ needs.get_changed_projects.outputs.di-framework }}
+    uses: ./.github/workflows/versioning_template.yml
+    with:
+      project: di-framework
+      env: 'dev'
+
+  update_version_yukikase-lib:
+    needs: get_changed_projects
+    if: ${{ needs.get_changed_projects.outputs.yukikase-lib }}
+    uses: ./.github/workflows/versioning_template.yml
+    id: version
+    with:
+      project: yukikase-lib
+      env: 'dev'
+
+  update_version_staffmanager-core:
+    needs: get_changed_projects
+    if: ${{ needs.get_changed_projects.outputs.staffmanager-core }}
+    uses: ./.github/workflows/versioning_template.yml
+    id: version
+    with:
+      project: staffmanager-core
+      env: 'dev'
+
   update_versions:
     runs-on: ubuntu-latest
-    needs: get_changed_projects
+    needs:
+      - update_version_di-framework
+      - update_version_yukikase-lib
+      - update_version_staffmanager-core
     outputs:
-      di-framework-version: ${{ steps.di-framework.outputs.version }}
-      yukikase-lib-version: ${{ steps.yukikase-lib.outputs.version }}
-      staffmanager-core-version: ${{ steps.staffmanager-core.outputs.version }}
+      di-framework-version: ${{ needs.update_version_di-framework.outputs.version }}
+      yukikase-lib-version: ${{ needs.update_version_yukikase-lib.outputs.version }}
+      staffmanager-core-version: ${{ needs.update_version_staffmanager-core.version }}
       changes: ${{ steps.changes.outputs.changes }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: update version of di-framework
-        id: di-framework
-        if: ${{ needs.get_changed_projects.outputs.di-framework }}
-        uses: ./.github/workflows/versioning_template.yml
-        with:
-          project: di-framework
-          env: 'dev'
-
-      - name: update version of yukikase-lib
-        id: yukikase-lib
-        if: ${{ needs.get_changed_projects.outputs.yukikase-lib }}
-        uses: ./.github/workflows/versioning_template.yml
-        with:
-          project: yukikase-lib
-          env: 'dev'
-
-      - name: update version of staffmanager.core
-        id: staffmanager-core
-        if: ${{ needs.get_changed_projects.outputs.staffmanager-core }}
-        uses: ./.github/workflows/versioning_template.yml
-        with:
-          project: staffmanager.core
-          env: 'dev'
-
       - name: get projects to build
         id: changes
         run: |
           changes=()
-          if [ -n ${{ steps.di-framework.outputs.needs-release }} ]; then
+          if [ -n ${{ needs.update_version_di-framework.outputs.needs-release }} ]; then
             changes=("${changes[@]}" "com.yukikase:di-framework")
           fi
-          if [ -n ${{ steps.yukikase-lib.outputs.needs-release }} ]; then
+          if [ -n ${{ needs.update_version_yukikase-lib.outputs.needs-release }} ]; then
             changes=("${changes[@]}" "com.yukikase:yukikase-lib")
           fi
-          if [ -n ${{ steps.staffmanager-core.outputs.needs-release }} ]; then
+          if [ -n ${{ needs.update_version_staffmanager-core.outputs.needs-release }} ]; then
             changes=("${changes[@]}" "com.yukikase:staffmanager.core")
           fi
           changes=$(IFS=, ; echo "${changes[*]}") echo "changes=$changes"
@@ -89,6 +94,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download pom.xml
+        uses: actions/download-artifact@v4
+        with:
+          name: di-framework-pom
+          path: di-framework/
+
+      - name: Download pom.xml
+        uses: actions/download-artifact@v4
+        with:
+          name: yukikase-lib-pom
+          path: yukikase-lib/
+
+      - name: Download pom.xml
+        uses: actions/download-artifact@v4
+        with:
+          name: staffmanager-core-pom
+          path: staffmanager/core/
 
       - name: Setup java
         uses: actions/setup-java@v4
