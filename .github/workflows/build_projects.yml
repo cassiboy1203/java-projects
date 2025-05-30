@@ -49,10 +49,10 @@ jobs:
           if [ -n ${{ needs.get_changed_projects.outputs.di-framework }} ]; then
             projects="$projects di-framework"
           fi
-          if [ -n ${{ needs.get_changed_projects.outputs.yukikase-lib }}; then
+          if [ -n ${{ needs.get_changed_projects.outputs.yukikase-lib }} ]; then
             projects="$projects yukikase-lib"
           fi
-          if [ -n ${{ needs.get_changed_projects.outputs.staffmanager-core }}; then
+          if [ -n ${{ needs.get_changed_projects.outputs.staffmanager-core }} ]; then
             projects="$projects staffmanager-core"
           fi
           echo "projects=$projects" >> $GITHUB_ENV
