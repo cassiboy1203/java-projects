@@ -1,46 +1,59 @@
 import argparse
+import multiprocessing
+from functools import partial
 
 import git_utils
 import release_notes
 import version_utils
+from classes import Project, Version
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("project")
+    parser.add_argument("projects", nargs='+')
     parser.add_argument("-e", "--env", default="main", choices=version_utils.envs.keys())
     parser.add_argument("-o", "--override")
     parser.add_argument("-d", "--debug", action="store_true")
     args = parser.parse_args()
 
-    project = args.project
+    projects = args.projects
     env = args.env
-    version_override = args.override
+    override = args.override
     debug = args.debug
 
+    ctx = multiprocessing.get_context("spawn")
+    with ctx.Pool() as p:
+        func = partial(determine_version_off_project, env=env, override=override, debug=debug)
+        versions = p.map(func, projects)
+
+    if not debug:
+        version_utils.write_new_version(versions, env)
+
+
+def determine_version_off_project(project: str, env="dev", override="", debug=False):
     current_version = version_utils.get_current_version(project, env)
     main_version = version_utils.get_current_version(project, "main")
     commits = git_utils.get_commits(project, env)
 
-    if version_override is None:
+    if override is None:
         new_version = version_utils.get_version(current_version, main_version, commits, project)
     else:
-        new_version = version_utils.Version.from_string(version_override)
+        new_version = Version.from_string(override)
 
     if new_version == current_version or new_version is None:
-        exit(1)
-    else:
-        if not debug:
-            version_utils.write_new_version(new_version, project)
+        return Project(project)
 
-            notes = release_notes.generate_release_notes(commits, new_version, project)
-            current_notes = release_notes.read_release_notes(project)
-            main_notes = f"{notes}\n\n{current_notes}"
-            release_notes.save_release_notes(notes)
-            if env == "main":
-                release_notes.save_release_notes(main_notes, f"release_notes/{project}.md")
+    if not debug:
+        notes = release_notes.generate_release_notes(commits, new_version, project)
+        current_notes = release_notes.read_release_notes(project)
+        main_notes = f"{notes}\n\n{current_notes}"
+        release_notes.save_release_notes(notes, f"{project}_release_notes.md")
+        if env == "main":
+            release_notes.save_release_notes(main_notes, f"release_notes/{project}.md")
 
-        print(new_version)
+    print(project, new_version, sep=":")
+
+    return Project(project, str(new_version))
 
 
 if __name__ == "__main__":

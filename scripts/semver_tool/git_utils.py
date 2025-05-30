@@ -20,7 +20,7 @@ def get_commits(project, env='main', repo_path="."):
     else:
         commit_range = f'HEAD'
 
-    commits = repo.iter_commits(commit_range, paths=project)
+    commits = repo.iter_commits(commit_range)
 
     return [c.message.strip() for c in commits]
 
