@@ -31,9 +31,11 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r scripts/semver_tool/requirements.txt
 
+      # TOOD: add creation of rntmp folder to the python script
       - name: Determine versions
         id: versions
         run: |
+          mkdir rntmp
           versions=$(python scripts/semver_tool/semver_tool.py -e dev di-framework yukikase-lib staffmanager-core)
           
           if [ -z "$versions" ]; then
