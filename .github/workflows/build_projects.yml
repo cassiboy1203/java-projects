@@ -112,24 +112,28 @@ jobs:
     needs:
       - update_versions
       - get_changed_projects
+      - determine_versions
     if: ${{ needs.update_versions.outputs.changes }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Download pom.xml
+        if: ${{ needs.determine_versions.outputs.di-framework-version }}
         uses: actions/download-artifact@v4
         with:
           name: di-framework-pom
           path: di-framework/
 
       - name: Download pom.xml
+        if: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
         uses: actions/download-artifact@v4
         with:
           name: yukikase-lib-pom
           path: yukikase-lib/
 
       - name: Download pom.xml
+        if: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
         uses: actions/download-artifact@v4
         with:
           name: staffmanager-core-pom
