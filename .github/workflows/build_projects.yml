@@ -36,7 +36,7 @@ jobs:
         run: |
           versions=$(python scripts/semver_tool/semver_tool.py -e dev di-framework yukikase-lib staffmanager-core)
           
-          if [ -z $versions ]
+          if [ -z $versions ]; then
             exit 78
           fi
           
