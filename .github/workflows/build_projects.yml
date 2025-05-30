@@ -53,6 +53,18 @@ jobs:
               echo "staffmanager-core-version=$version" >> $GITHUB_OUTPUT
             fi
           done
+
+      - name: Upload version file
+        uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: version.yaml
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release_notes
+          path: rntmp/
   
   update_versions:
     runs-on: ubuntu-latest
@@ -81,6 +93,9 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     needs:
       - update_versions
       - determine_versions
@@ -88,38 +103,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download pom.xml
-        if: ${{ needs.determine_versions.outputs.di-framework-version }}
-        uses: actions/download-artifact@v4
-        with:
-          name: di-framework-pom
-          path: di-framework/
-
-      - name: Download pom.xml
-        if: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
-        uses: actions/download-artifact@v4
-        with:
-          name: yukikase-lib-pom
-          path: yukikase-lib/
-
-      - name: Download pom.xml
-        if: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
-        uses: actions/download-artifact@v4
-        with:
-          name: staffmanager-core-pom
-          path: staffmanager/core/
-
       - name: Setup java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Update di-framework version
+        if: ${{ needs.determine_versions.outputs.di-framework-version }}
+        working-directory: di-framework
+        run: |
+          mvn versions:set -DnewVersion=${{ needs.determine_versions.outputs.di-framework-version }}
+          mvn versions:commit
+
+      - name: Update yukikase-lib version
+        if: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
+        working-directory: yukikase-lib
+        run: |
+          mvn versions:set -DnewVersion=${{ needs.determine_versions.outputs.yukikase-lib-version }}
+          mvn versions:commit
+
+      - name: Update staffmanager-core version
+        if: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
+        working-directory: staffmanager/core
+        run: |
+          mvn versions:set -DnewVersion=${{ needs.determine_versions.outputs.staffmanager-core-version }}
+          mvn versions:commit
+
       - name: Authenticate to GitHub Packages
         run: echo "<settings><servers><server><id>3-github</id><username>${{ github.actor }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
 
       - name: build and deploy all changed projects
         run: mvn --batch-mode deploy -pl ${{ needs.update_versions.outputs.changes }} -amd
+
+      - name: commit changed poms
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add di-framework/pom.xml yukikase-lib/pom.xml staffmanager/core/pom.xml
+          git commit -m "chore: updated version in poms"
+          git push
 
       - name: Upload di-framework jar
         if: ${{ needs.get_changed_projects.outputs.di-framework }}

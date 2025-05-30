@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       env:
-        default: 'main'
+        default: 'dev'
         required: true
         type: string
         description: The environment type pipeline is run in
@@ -26,7 +26,7 @@ jobs:
     permissions:
       contents: write
       packages: write
-
+    # TODO : allow for changes on main branch
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,40 +34,16 @@ jobs:
       - name: Download version release notes
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.project }}_version_release_notes
-          path: ${{ env.path }}
-
-      - name: Download release notes
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.project }}_release_notes
-          path: release_notes/
-
+          name: release_notes
+          path: rntmp/
       - name: Get path
+
         run: |
           if [ -z ${{ inputs.path }} ]; then
             echo "path=${{ inputs.project }}" >> $GITHUB_ENV
           else
             echo "path=${{ inputs.path }}" >> $GITHUB_ENV
           fi
-
-      - name: Download pom.xml
-        uses: actions/download-artifact@v4
-        with:
-          name: pom
-          path: ${{ env.path }}/
-
-      - name: Add release notes to git
-        if: inputs.env == 'main'
-        run: git add release_notes/${{ inputs.project }}.md
-
-      - name: Commit version, release notes and updated pom.xml
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add ${{ env.path }}/pom.xml
-          git commit -m "chore(${{ inputs.project }}): release new version"
-          git push
 
       - name: Create tag
         run: |
@@ -95,7 +71,7 @@ jobs:
         with:
           tag_name: ${{ inputs.project }}_${{ needs.versioning.outputs.version }}
           name: ${{ inputs.project }} v${{ needs.versioning.outputs.version }}
-          body_path: ${{ env.path }}/release_notes.md
+          body_path: rntmp/${{ inputs.project }}_release_notes.md
           files: ${{ env.path }}/target/${{ inputs.project }}-${{ needs.versioning.outputs.version }}.jar
           prerelease: ${{ steps.prerelease.outputs.prerelease }}
         env:

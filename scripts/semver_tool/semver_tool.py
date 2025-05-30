@@ -47,7 +47,7 @@ def determine_version_off_project(project: str, env="dev", override="", debug=Fa
         notes = release_notes.generate_release_notes(commits, new_version, project)
         current_notes = release_notes.read_release_notes(project)
         main_notes = f"{notes}\n\n{current_notes}"
-        release_notes.save_release_notes(notes, f"{project}_release_notes.md")
+        release_notes.save_release_notes(notes, f"rntmp/{project}_release_notes.md")
         if env == "main":
             release_notes.save_release_notes(main_notes, f"release_notes/{project}.md")
 
