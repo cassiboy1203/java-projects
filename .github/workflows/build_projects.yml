@@ -36,7 +36,7 @@ jobs:
         run: |
           versions=$(python scripts/semver_tool/semver_tool.py -e dev di-framework yukikase-lib staffmanager-core)
           
-          if [ -z $versions ]; then
+          if [ -z "$versions" ]; then
             exit 78
           fi
           
@@ -45,11 +45,11 @@ jobs:
             IFS=':' 
             read -r project version <<<"$item"
             IFS=$'\n'
-            if [ $project -eq "di-framework" ]; then
+            if [ "$project" = "di-framework" ]; then
               echo "di-framework-version=$version" >> $GITHUB_OUTPUT
-            elif [ $project -eq "yukikase-lib" ]; then
+            elif [ "$project" = "yukikase-lib" ]; then
               echo "yukikase-lib-version=$version" >> $GITHUB_OUTPUT
-            elif [ $project -eq "staffmanager-core" ]; then
+            elif [ "$project" = "staffmanager-core" ]; then
               echo "staffmanager-core-version=$version" >> $GITHUB_OUTPUT
             fi
           done
