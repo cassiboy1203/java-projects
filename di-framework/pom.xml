@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>di-framework</artifactId>
-    <version>0.1.0-dev_2</version>
+    <version>${di-framework.version}</version>
     <parent>
         <artifactId>java_projects</artifactId>
         <groupId>com.yukikase</groupId>

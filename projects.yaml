@@ -1,0 +1,5 @@
+di-framework:
+  - "*"
+yukikase-lib:
+  - staffmanager-core
+staffmanager-core: [ ]

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>yukikase-lib</artifactId>
-    <version>0.1.2-dev_1</version>
+    <version>${yukikase-lib.version}</version>
     <parent>
         <artifactId>java_projects</artifactId>
         <groupId>com.yukikase</groupId>

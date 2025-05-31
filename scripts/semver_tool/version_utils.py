@@ -95,6 +95,15 @@ def get_current_version(project, env):
         return Version(env=env)
 
 
+def get_projects():
+    try:
+        with open("projects.yaml", "r") as f:
+            return yaml.safe_load(f)
+
+    except (FileNotFoundError, KeyError):
+        return None
+
+
 def write_new_version(versions: list[Project], env: str):
     if env not in envs.keys():
         raise Exception(f"Environment {env} does not exist.")

@@ -26,6 +26,25 @@ def main():
         func = partial(determine_version_off_project, env=env, override=override, debug=debug)
         versions = p.map(func, projects)
 
+    dependency_graph = version_utils.get_projects()
+
+    dvl = []
+
+    for version in versions:
+        dependant_projects = dependency_graph[version.project]
+
+        if "*" in dependant_projects:
+            dependant_projects = dependency_graph.keys()
+
+        for dependant in dependant_projects:
+            if not any(v.project == dependant for v in versions):
+                cv = version_utils.get_current_version(dependant, env)
+                cv.bump_build()
+                print(dependant, cv, sep=":")
+                dvl.append(Project(dependant, cv))
+
+    versions.extend(dvl)
+
     if not debug:
         version_utils.write_new_version(versions, env)
 
