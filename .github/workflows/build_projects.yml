@@ -113,13 +113,13 @@ jobs:
 
       - name: Update versions
         run: |
-          if [ -n ${{ needs.determine_versions.outputs.di-framework-version }} ]; then
+          if [ -n "${{ needs.determine_versions.outputs.di-framework-version }}" ]; then
             mvn versions:set-property -Dproperty=di-framework.version -DnewVersion=${{ needs.determine_versions.outputs.di-framework-version }}
           fi
-          if [ -n ${{ needs.determine_versions.outputs.yukikase-lib-version }} ]; then
+          if [ -n "${{ needs.determine_versions.outputs.yukikase-lib-version }}" ]; then
             mvn versions:set-property -Dproperty=yukikase-lib.version -DnewVersion=${{ needs.determine_versions.outputs.yukikase-lib-version }}
           fi
-          if [ -n ${{ needs.determine_versions.outputs.staffmanager-core-version }} ]; then
+          if [ -n "${{ needs.determine_versions.outputs.staffmanager-core-version }}" ]; then
             mvn versions:set-property -Dproperty=staffmanager.core.version -DnewVersion=${{ needs.determine_versions.outputs.staffmanager-core-version }}
           fi
           mvn versions:commit
