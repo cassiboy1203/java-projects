@@ -193,27 +193,36 @@ jobs:
         run: |
           ls -al ./.github/workflows/
 
-      - name: Release di framework
-        if: ${{ needs.determine_versions.outputs.di-framework-version }}
-        uses: ./.github/workflows/release_template.yml
-        with:
-          env: 'dev'
-          version: ${{ needs.determine_versions.outputs.di-framework-version }}
-          project: 'di-framework'
+  release-di-framework:
+    needs:
+      - determine_versions
+      - release
+    if: ${{ needs.determine_versions.outputs.di-framework-version }}
+    uses: ./.github/workflows/release_template.yml
+    with:
+      env: 'dev'
+      version: ${{ needs.determine_versions.outputs.di-framework-version }}
+      project: 'di-framework'
 
-      - name: Release yukikase lib
-        if: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
-        uses: ./.github/workflows/release_template.yml
-        with:
-          env: 'dev'
-          version: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
-          project: 'yukikase-lib'
+  release-yukikase-lib:
+    needs:
+      - determine_versions
+      - release
+    if: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
+    uses: ./.github/workflows/release_template.yml
+    with:
+      env: 'dev'
+      version: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
+      project: 'yukikase-lib'
 
-      - name: Release staffmanager core
-        if: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
-        uses: ./.github/workflows/release_template.yml
-        with:
-          env: 'dev'
-          version: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
-          project: 'staffmanager-core'
-          path: 'staffmanager/core'
+  release-staffmanager-core:
+    needs:
+      - determine_versions
+      - release
+    if: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
+    uses: ./.github/workflows/release_template.yml
+    with:
+      env: 'dev'
+      version: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
+      project: 'staffmanager-core'
+      path: 'staffmanager/core'
