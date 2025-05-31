@@ -1,5 +1,6 @@
 import argparse
 import multiprocessing
+from collections import deque
 from functools import partial
 
 import git_utils
@@ -28,25 +29,35 @@ def main():
 
     dependency_graph = version_utils.get_projects()
 
-    dvl = []
+    v_queue = deque()
+
+    cleaned_versions = []
 
     for version in versions:
+        if version.version != "":
+            cleaned_versions.append(version)
+            v_queue.append(version)
+
+    while v_queue:
+        version = v_queue.popleft()
         dependant_projects = dependency_graph[version.project]
 
         if "*" in dependant_projects:
             dependant_projects = dependency_graph.keys()
 
         for dependant in dependant_projects:
-            if not any(v.project == dependant for v in versions):
+            if dependant == version.project:
+                continue
+            if not any(v.project == dependant for v in cleaned_versions):
                 cv = version_utils.get_current_version(dependant, env)
                 cv.bump_build()
                 print(dependant, cv, sep=":")
-                dvl.append(Project(dependant, cv))
-
-    versions.extend(dvl)
+                project = Project(dependant, str(cv))
+                cleaned_versions.append(project)
+                v_queue.append(project)
 
     if not debug:
-        version_utils.write_new_version(versions, env)
+        version_utils.write_new_version(cleaned_versions, env)
 
 
 def determine_version_off_project(project: str, env="dev", override="", debug=False):

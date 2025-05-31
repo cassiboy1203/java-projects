@@ -131,6 +131,7 @@ jobs:
         run: mvn --batch-mode deploy -pl ${{ needs.update_versions.outputs.changes }}
 
       - name: commit pom
+        continue-on-error: true
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
