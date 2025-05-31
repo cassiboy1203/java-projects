@@ -81,13 +81,13 @@ jobs:
         id: changes
         run: |
           changes=()
-          if [ -n ${{ needs.determine_versions.outputs.di-framework-version }} ]; then
+          if [ -n "${{ needs.determine_versions.outputs.di-framework-version }}" ]; then
             changes=("${changes[@]}" "com.yukikase:di-framework")
           fi
-          if [ -n ${{ needs.determine_versions.outputs.yukikase-lib-version }} ]; then
+          if [ -n "${{ needs.determine_versions.outputs.yukikase-lib-version }}" ]; then
             changes=("${changes[@]}" "com.yukikase:yukikase-lib")
           fi
-          if [ -n ${{ needs.determine_versions.outputs.staffmanager-core-version }} ]; then
+          if [ -n "${{ needs.determine_versions.outputs.staffmanager-core-version }}" ]; then
             changes=("${changes[@]}" "com.yukikase:staffmanager.core")
           fi
           changes=$(IFS=, ; echo "${changes[*]}") echo "changes=$changes"
