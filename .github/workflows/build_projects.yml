@@ -194,6 +194,8 @@ jobs:
           ls -al ./.github/workflows/
 
   release-di-framework:
+    permissions:
+      contents: write
     needs:
       - determine_versions
       - release
@@ -205,6 +207,8 @@ jobs:
       project: 'di-framework'
 
   release-yukikase-lib:
+    permissions:
+      contents: write
     needs:
       - determine_versions
       - release
@@ -216,6 +220,8 @@ jobs:
       project: 'yukikase-lib'
 
   release-staffmanager-core:
+    permissions:
+      contents: write
     needs:
       - determine_versions
       - release

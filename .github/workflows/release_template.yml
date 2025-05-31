@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
     # TODO : allow for changes on main branch
     steps:
       - name: Checkout
