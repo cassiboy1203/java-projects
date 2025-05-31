@@ -137,21 +137,21 @@ jobs:
           path: pom.xml
 
       - name: Upload di-framework jar
-        if: ${{ needs.determine_versions.outputs.di-framework }}
+        if: ${{ needs.determine_versions.outputs.di-framework-version }}
         uses: actions/upload-artifact@v4
         with:
           name: di-framework-jar
           path: di-framework/target/*.jar
 
       - name: Upload yukikase-lib jar
-        if: ${{ needs.determine_versions.outputs.yukikase-lib }}
+        if: ${{ needs.determine_versions.outputs.yukikase-lib-version }}
         uses: actions/upload-artifact@v4
         with:
           name: yukikase-lib-jar
           path: yukikase-lib/target/*.jar
 
       - name: Upload staffmanager-core jar
-        if: ${{ needs.determine_versions.outputs.staffmanager-core }}
+        if: ${{ needs.determine_versions.outputs.staffmanager-core-version }}
         uses: actions/upload-artifact@v4
         with:
           name: staffmanager-core-jar
@@ -188,6 +188,10 @@ jobs:
           git add version.yaml pom.xml
           git commit -m "chore: update version file and pom"
           git push
+
+      - name: get workflow folder contents
+        run: |
+          ls -al ./.github/workflows/
 
       - name: Release di framework
         if: ${{ needs.determine_versions.outputs.di-framework-version }}
