@@ -130,31 +130,28 @@ jobs:
       - name: build and deploy all changed projects
         run: mvn --batch-mode deploy -pl ${{ needs.update_versions.outputs.changes }}
 
-      - name: commit pom
-        continue-on-error: true
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add pom.xml
-          git commit -m "chore: updated versions in pom"
-          git push
+      - name: Upload pom
+        uses: actions/upload-artifact@v4
+        with:
+          name: pom
+          path: pom.xml
 
       - name: Upload di-framework jar
-        if: ${{ needs.get_changed_projects.outputs.di-framework }}
+        if: ${{ needs.determine_versions.outputs.di-framework }}
         uses: actions/upload-artifact@v4
         with:
           name: di-framework-jar
           path: di-framework/target/*.jar
 
       - name: Upload yukikase-lib jar
-        if: ${{ needs.get_changed_projects.outputs.yukikase-lib }}
+        if: ${{ needs.determine_versions.outputs.yukikase-lib }}
         uses: actions/upload-artifact@v4
         with:
           name: yukikase-lib-jar
           path: yukikase-lib/target/*.jar
 
       - name: Upload staffmanager-core jar
-        if: ${{ needs.get_changed_projects.outputs.staffmanager-core }}
+        if: ${{ needs.determine_versions.outputs.staffmanager-core }}
         uses: actions/upload-artifact@v4
         with:
           name: staffmanager-core-jar
@@ -178,12 +175,18 @@ jobs:
           name: version
           path: ./
 
-      - name: Commit version file
+      - name: Download pom.xml
+        uses: actions/download-artifact@v4
+        with:
+          name: pom
+          path: ./
+
+      - name: Commit version file and pom
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add version.yaml
-          git commit -m "chore: update version file"
+          git add version.yaml pom.xml
+          git commit -m "chore: update version file and pom"
           git push
 
       - name: Release di framework
