@@ -14,7 +14,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <yukikase-lib.version>0.1.2-dev_1</yukikase-lib.version>
+        <yukikase-lib.version>0.1.2-dev_2</yukikase-lib.version>
         <di-framework.version>0.1.0-dev_3</di-framework.version>
         <staffmanager.core.version>0.1.0-dev_2</staffmanager.core.version>
     </properties>
