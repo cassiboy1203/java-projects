@@ -1,10 +1,22 @@
 package com.yukikase.lib.interfaces;
 
-import org.bukkit.command.Command;
+import com.yukikase.lib.permission.Permission;
 import org.bukkit.command.CommandSender;
 
 public interface ICommand {
     String name();
 
-    boolean onCommand(CommandSender sender, Command command, String[] args);
+    default String description() {
+        return "";
+    }
+
+    default String usage() {
+        return "";
+    }
+
+    default Permission permission() {
+        return null;
+    }
+
+    boolean onCommand(CommandSender sender, String[] args);
 }

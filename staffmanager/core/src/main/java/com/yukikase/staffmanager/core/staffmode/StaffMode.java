@@ -3,8 +3,8 @@ package com.yukikase.staffmanager.core.staffmode;
 import com.yukikase.diframework.anotations.Component;
 import com.yukikase.diframework.anotations.Inject;
 import com.yukikase.diframework.anotations.Singleton;
-import com.yukikase.lib.IPermissionHandler;
-import com.yukikase.staffmanager.core.commands.StaffCommand;
+import com.yukikase.lib.permission.IPermissionHandler;
+import com.yukikase.staffmanager.core.PermissionRegister;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -49,9 +49,9 @@ public class StaffMode implements IStaffMode {
     public boolean enterStaffMode(Player player) {
         this.playersInStaffMode.add(player.getUniqueId());
 
-        if (this.permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.GODMODE_PERMISSION))
+        if (this.permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GOD))
             player.setInvulnerable(true);
-        if (this.permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.FLY_PERMISSON))
+        if (this.permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_FLY))
             player.setAllowFlight(true);
 
         player.sendMessage(ENTER_STAFF_MODE_MESSAGE);

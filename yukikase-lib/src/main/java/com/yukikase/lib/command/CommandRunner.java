@@ -1,40 +1,54 @@
 package com.yukikase.lib.command;
 
-import com.yukikase.lib.IPermissionHandler;
-import com.yukikase.lib.PermissionHandler;
 import com.yukikase.lib.YukikasePlugin;
-import com.yukikase.lib.annotations.Permission;
 import com.yukikase.lib.annotations.command.Alias;
 import com.yukikase.lib.annotations.command.Aliases;
 import com.yukikase.lib.exceptions.InvalidCommandException;
 import com.yukikase.lib.exceptions.UnauthorizedException;
 import com.yukikase.lib.interfaces.ICommand;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import com.yukikase.lib.permission.IPermissionHandler;
+import com.yukikase.lib.permission.Permission;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-class CommandRunner implements CommandExecutor {
+class CommandRunner extends BukkitCommand {
     private final ICommand command;
     private final IPermissionHandler permissionHandler;
     private final YukikasePlugin plugin;
-    private CommandNode rootCommand;
+    private final CommandNode rootCommand;
 
     CommandRunner(ICommand command, IPermissionHandler permissionHandler, YukikasePlugin plugin) {
+        super(command.name());
+
+        this.setName(command.name());
+        this.setDescription(command.description());
+        this.setUsage(command.usage());
+
+        if (command.permission() != null) {
+            this.setPermission(command.permission().toString());
+        }
+
         this.command = command;
         this.permissionHandler = permissionHandler;
-        this.rootCommand = new CommandNode("", "", null, true);
+        this.rootCommand = new CommandNode("", "", null, null, true);
         this.plugin = plugin;
 
-        registerCommands();
+        var aliases = registerCommands();
+
+        this.setAliases(aliases);
     }
 
-    private void registerCommands() {
+    private List<String> registerCommands() {
         Queue<CommandNode> commands = new LinkedList<>();
+        List<String> names = new ArrayList<>();
+
+        var commandPermission = command.permission();
 
         for (var method : command.getClass().getMethods()) {
             Alias[] aliases = null;
@@ -54,13 +68,20 @@ class CommandRunner implements CommandExecutor {
 
                     if (alias.alias().isEmpty())
                         name = command.name();
+                    else if (!names.contains(alias.alias())) {
+                        names.add(alias.alias());
+                    }
 
-                    var node = new CommandNode(name, alias.subcommand(), method);
+                    Permission permission = commandPermission;
+                    if (!alias.permission().isEmpty())
+                        permission = this.permissionHandler.getPermission(alias.permission());
+
+                    var node = new CommandNode(name, alias.subcommand(), permission, method);
                     commands.add(node);
                 }
             } else {
                 if (method.getName().equals("onCommand")) {
-                    var node = new CommandNode(command.name(), "", method);
+                    var node = new CommandNode(command.name(), "", commandPermission, method);
                     commands.add(node);
                 }
             }
@@ -82,7 +103,7 @@ class CommandRunner implements CommandExecutor {
         }
 
         for (var aliasCommands : subCommands.entrySet()) {
-            var root = aliasCommands.getValue().stream().filter(n -> n.getSubcommand().isEmpty()).findFirst().orElse(new CommandNode(aliasCommands.getKey(), "", null));
+            var root = aliasCommands.getValue().stream().filter(n -> n.getSubcommand().isEmpty()).findFirst().orElse(new CommandNode(aliasCommands.getKey(), "", null, null));
 
             rootCommand.addChild(root);
 
@@ -90,41 +111,28 @@ class CommandRunner implements CommandExecutor {
                 root.addChild(child);
             }
         }
+
+        return names;
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] args) {
+    public boolean execute(@NonNull CommandSender commandSender, @NonNull String commandName, @NonNull String[] args) {
         this.plugin.useClassLoader();
         var commandNode = rootCommand.getNodeToExecute(commandName, args);
         try {
-            return runCommand(commandSender, command, Arrays.copyOfRange(args, commandNode.getDepth(), args.length), commandNode.getMethod());
+            return runCommand(commandSender, Arrays.copyOfRange(args, commandNode.getDepth(), args.length), commandNode.getPermission(), commandNode.getMethod());
         } catch (IllegalAccessException | InvocationTargetException e) {
             // This exception should never be thrown.
             throw new InvalidCommandException();
         }
     }
 
-    private boolean runCommand(CommandSender commandSender, Command command, String[] args, Method method) throws InvocationTargetException, IllegalAccessException {
+    private boolean runCommand(CommandSender commandSender, String[] args, Permission permission, Method method) throws InvocationTargetException, IllegalAccessException {
         if (commandSender instanceof Player player) {
-            boolean checkForPermission = true;
-
-            if (this.command.getClass().isAnnotationPresent(Permission.class)) {
-                var permission = this.command.getClass().getAnnotation(Permission.class);
-                if (permission.handler().equals(PermissionHandler.MANUAL))
-                    checkForPermission = false;
-            }
-
-            if (method.isAnnotationPresent(Permission.class)) {
-                var permission = method.getAnnotation(Permission.class);
-
-                if (permission.handler().equals(PermissionHandler.MANUAL))
-                    checkForPermission = false;
-            }
-
-            if (checkForPermission && !this.permissionHandler.playerHasPermission(player, method))
-                throw new UnauthorizedException(UnauthorizedException.PLAYER_UNAUTHORIZED_SUB_COMMAND);
+            if (permission != null && !permissionHandler.playerHasPermission(player, permission))
+                throw new UnauthorizedException(UnauthorizedException.EC_PLAYER_UNAUTHORIZED_COMMAND);
         }
 
-        return (boolean) method.invoke(this.command, commandSender, command, args);
+        return (boolean) method.invoke(this.command, commandSender, args);
     }
 }

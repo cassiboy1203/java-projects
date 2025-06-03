@@ -1,6 +1,7 @@
 package com.yukikase.lib.command;
 
 import com.yukikase.lib.exceptions.InvalidCommandException;
+import com.yukikase.lib.permission.Permission;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -12,17 +13,19 @@ public class CommandNode {
     final Map<String, CommandNode> children;
     private final String command;
     private final String subcommand;
+    private final Permission permission;
     private final Method method;
     private final boolean isRoot;
     private int depth;
 
-    public CommandNode(String command, String subcommand, Method method) {
-        this(command, subcommand, method, false);
+    public CommandNode(String command, String subcommand, Permission permission, Method method) {
+        this(command, subcommand, permission, method, false);
     }
 
-    public CommandNode(String command, String subcommand, Method method, boolean isRoot) {
+    public CommandNode(String command, String subcommand, Permission permission, Method method, boolean isRoot) {
         this.command = command;
         this.subcommand = subcommand;
+        this.permission = permission;
         this.method = method;
         this.isRoot = isRoot;
         this.children = new HashMap<>();
@@ -47,6 +50,10 @@ public class CommandNode {
 
     public String getCommand() {
         return command;
+    }
+
+    public Permission getPermission() {
+        return permission;
     }
 
     public String getName(boolean calledFromRoot) {

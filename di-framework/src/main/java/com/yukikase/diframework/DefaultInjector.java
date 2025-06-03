@@ -102,9 +102,15 @@ public final class DefaultInjector implements Injector {
 
             try (var stream = new ZipInputStream(new FileInputStream(mainClass.getProtectionDomain().getCodeSource().getLocation().getPath()))) {
                 for (var entry = stream.getNextEntry(); entry != null; entry = stream.getNextEntry()) {
-                    if (entry.getName().endsWith(".class")) {
-                        classes.add(Class.forName(entry.getName().substring(0, entry.getName().length() - 6).replaceAll("/", ".")));
+                    try {
+                        if (entry.getName().endsWith(".class")) {
+                            classes.add(Class.forName(entry.getName().substring(0, entry.getName().length() - 6).replaceAll("/", ".")));
+                        }
+                    } catch (NoClassDefFoundError | IllegalAccessError e) {
+                        continue;
+                        //TODO: change this method so there are no errors here
                     }
+
                 }
 
             } catch (IOException | ClassNotFoundException e) {

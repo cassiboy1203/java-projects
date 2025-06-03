@@ -10,16 +10,16 @@ class CommandNodeTest {
     private CommandNode sut;
 
     private void setupSutWithSubCommandsAliasAliasWithSubCommand() {
-        sut = new CommandNode("", "", null, true);
+        sut = new CommandNode("", "", null, null, true);
 
-        var aliasRoot = new CommandNode("alias", "", null);
-        var aliasSub = new CommandNode("alias", "sub", null);
+        var aliasRoot = new CommandNode("alias", "", null, null);
+        var aliasSub = new CommandNode("alias", "sub", null, null);
 
         aliasRoot.addChild(aliasSub);
 
-        var defaultCommand = new CommandNode("test", "", null);
-        var sub1 = new CommandNode("test", "sub1", null);
-        var sub2 = new CommandNode("test", "sub2", null);
+        var defaultCommand = new CommandNode("test", "", null, null);
+        var sub1 = new CommandNode("test", "sub1", null, null);
+        var sub2 = new CommandNode("test", "sub2", null, null);
 
         defaultCommand.addChild(sub1);
         defaultCommand.addChild(sub2);
@@ -33,7 +33,7 @@ class CommandNodeTest {
         //arrange
         setupSutWithSubCommandsAliasAliasWithSubCommand();
 
-        var expected = new CommandNode("alias", "", null);
+        var expected = new CommandNode("alias", "", null, null);
 
         //act
         var actual = sut.getNodeToExecute("alias", new String[]{});
@@ -47,7 +47,7 @@ class CommandNodeTest {
         //arrange
         setupSutWithSubCommandsAliasAliasWithSubCommand();
 
-        var expected = new CommandNode("test", "sub1", null);
+        var expected = new CommandNode("test", "sub1", null, null);
 
         //act
         var actual = sut.getNodeToExecute("test", new String[]{"sub1"});
@@ -61,7 +61,7 @@ class CommandNodeTest {
         //arrange
         setupSutWithSubCommandsAliasAliasWithSubCommand();
 
-        var expected = new CommandNode("test", "", null);
+        var expected = new CommandNode("test", "", null, null);
 
         //act
         var actual = sut.getNodeToExecute("test", new String[]{});
@@ -75,7 +75,7 @@ class CommandNodeTest {
         //arrange
         setupSutWithSubCommandsAliasAliasWithSubCommand();
 
-        var expected = new CommandNode("alias", "sub", null);
+        var expected = new CommandNode("alias", "sub", null, null);
 
         //act
         var actual = sut.getNodeToExecute("alias", new String[]{"sub"});
@@ -89,7 +89,7 @@ class CommandNodeTest {
         //arrange
         setupSutWithSubCommandsAliasAliasWithSubCommand();
 
-        var expected = new CommandNode("alias", "", null);
+        var expected = new CommandNode("alias", "", null, null);
 
         //act
         var actual = sut.getNodeToExecute("alias", new String[]{"none"});
