@@ -1,4 +1,4 @@
-package com.yukikase.lib;
+package com.yukikase.lib.exceptions;
 
 import org.bukkit.entity.Player;
 

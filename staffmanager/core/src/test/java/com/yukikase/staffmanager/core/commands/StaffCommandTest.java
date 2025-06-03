@@ -42,7 +42,7 @@ class StaffCommandTest {
         when(staffMode.toggleStaffMode(player)).thenReturn(true);
 
         //act
-        var actual = sut.onCommand(player, command, null);
+        var actual = sut.onCommand(player, null);
 
         //assert
         verify(staffMode).toggleStaffMode(player);
@@ -57,7 +57,7 @@ class StaffCommandTest {
         var command = mock(Command.class);
 
         //act
-        var actual = sut.onCommand(sender, command, null);
+        var actual = sut.onCommand(sender, null);
 
         //assert
         verify(staffMode, never()).toggleStaffMode(any());

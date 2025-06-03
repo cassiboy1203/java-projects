@@ -1,11 +1,8 @@
 package com.yukikase.lib.testclasses;
 
-import com.yukikase.lib.annotations.Permission;
 import com.yukikase.lib.interfaces.ICommand;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-@Permission("class")
 public class CommandClassSingleMethod implements ICommand {
     @Override
     public String name() {
@@ -13,8 +10,7 @@ public class CommandClassSingleMethod implements ICommand {
     }
 
     @Override
-    @Permission("method")
-    public boolean onCommand(CommandSender sender, Command command, String[] args) {
+    public boolean onCommand(CommandSender sender, String[] args) {
         return true;
     }
 }

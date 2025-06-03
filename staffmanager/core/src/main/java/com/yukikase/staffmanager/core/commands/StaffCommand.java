@@ -2,15 +2,14 @@ package com.yukikase.staffmanager.core.commands;
 
 import com.yukikase.diframework.anotations.Component;
 import com.yukikase.diframework.anotations.Inject;
-import com.yukikase.lib.annotations.Permission;
 import com.yukikase.lib.interfaces.ICommand;
+import com.yukikase.lib.permission.Permission;
+import com.yukikase.staffmanager.core.PermissionRegister;
 import com.yukikase.staffmanager.core.staffmode.IStaffMode;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @Component
-@Permission(IStaffMode.PERMISSION)
 public class StaffCommand implements ICommand {
     public static final String NAME = "staff";
 
@@ -27,7 +26,12 @@ public class StaffCommand implements ICommand {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String[] args) {
+    public Permission permission() {
+        return PermissionRegister.STAFF_MODE_BASE;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, String[] args) {
         if (sender instanceof Player player) {
             return staffMode.toggleStaffMode(player);
         }

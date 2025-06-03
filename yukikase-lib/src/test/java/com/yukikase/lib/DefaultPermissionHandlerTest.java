@@ -1,27 +1,28 @@
 package com.yukikase.lib;
 
 import com.yukikase.lib.exceptions.NoPermissionFoundException;
-import com.yukikase.lib.testclasses.*;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
+import com.yukikase.lib.exceptions.NoPermissionRegisterFound;
+import com.yukikase.lib.permission.DefaultPermissionHandler;
+import com.yukikase.lib.testclasses.PermissionRegisterTest;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class DefaultPermissionHandlerTest {
 
     private DefaultPermissionHandler sut;
-    private YukikasePlugin plugin;
     private Player player;
+    private YukikasePlugin plugin;
 
     @BeforeEach
     void setUp() {
-        plugin = mock(PluginClass.class);
         player = mock(Player.class);
+        plugin = mock(YukikasePlugin.class);
+
+        doReturn(PermissionRegisterTest.class).when(plugin).permissionRegister();
 
         sut = new DefaultPermissionHandler(plugin);
     }
@@ -31,7 +32,7 @@ class DefaultPermissionHandlerTest {
         //arrange
         when(player.hasPermission("permission")).thenReturn(true);
 
-        //assert
+        //act
         var actual = sut.playerHasPermission(player, "permission");
 
         //assert
@@ -43,7 +44,7 @@ class DefaultPermissionHandlerTest {
         //arrange
         when(player.hasPermission("permission")).thenReturn(false);
 
-        //assert
+        //act
         var actual = sut.playerHasPermission(player, "permission");
 
         //assert
@@ -51,128 +52,70 @@ class DefaultPermissionHandlerTest {
     }
 
     @Test
-    void testPlayerHasPermissionWithStingArray() {
+    void testPlayerHasPermissionWithPermission() {
         //arrange
-        when(player.hasPermission("plugin.permission.test")).thenReturn(true);
+        when(player.hasPermission("permission")).thenReturn(true);
 
         //act
-        var actual = sut.playerHasPermission(player, "permission", "test");
+        var actual = sut.playerHasPermission(player, PermissionRegisterTest.TEST_BASE);
 
         //assert
         assertTrue(actual);
     }
 
     @Test
-    void testPlayerDoesNotHavePermissionWithStingArray() {
+    void testPlayerDoesNotHavePermissionWithPermission() {
         //arrange
-        when(player.hasPermission("permission.test")).thenReturn(false);
+        when(player.hasPermission("permission")).thenReturn(false);
 
         //act
-        var actual = sut.playerHasPermission(player, "permission", "test");
+        var actual = sut.playerHasPermission(player, PermissionRegisterTest.TEST_BASE);
 
         //assert
         assertFalse(actual);
     }
 
     @Test
-    void playerHasPermissionOfCommand() {
+    void testGetPermission() {
         //arrange
-        when(player.hasPermission("plugin.class")).thenReturn(true);
 
         //act
-        var actual = sut.playerHasPermission(player, CommandClassSingleMethod.class);
+        var actual = sut.getPermission("TEST_BASE");
 
         //assert
-        assertTrue(actual);
+        assertEquals(PermissionRegisterTest.TEST_BASE, actual);
     }
 
     @Test
-    void playerHasPermissionOfCommandWithoutPermissionOnClassThrowsNoPermissionFoundException() {
+    void testGetPermissionNoPermissionFound() {
         //arrange
-        plugin = mock(YukikasePlugin.class);
-        sut = new DefaultPermissionHandler(plugin);
 
         //assert
-        var exception = assertThrows(NoPermissionFoundException.class, () -> {
+        assertThrows(NoPermissionFoundException.class, () -> {
             //act
-            sut.playerHasPermission(player, CommandClassWithAliasAndSubCommands.class);
+            sut.getPermission("NONE");
         });
-
-        assertEquals(String.format(NoPermissionFoundException.CLASS_DOES_NOT_HAVE_PERMISSION, CommandClassWithAliasAndSubCommands.class.getName()), exception.getMessage());
     }
 
     @Test
-    void playerHasPermissionOfCommandWithIgnorePluginPrefix() {
+    void testGetPermissionFieldNotAPermission() {
         //arrange
-        when(player.hasPermission("class")).thenReturn(true);
-
-        //act
-        var actual = sut.playerHasPermission(player, PermissionNoPluginPrefixClass.class);
 
         //assert
-        assertTrue(actual);
+        assertThrows(NoPermissionFoundException.class, () -> {
+            sut.getPermission("NOT_A_PERMISSION");
+        });
     }
 
     @Test
-    void playerHasPermissionOfCommandWithIgnorePrefix() {
+    void testGetPermissionNoRegister() {
         //arrange
-        when(player.hasPermission("class")).thenReturn(true);
-
-        //act
-        var actual = sut.playerHasPermission(player, PermissionNoPrefixClass.class);
+        doReturn(null).when(plugin).permissionRegister();
 
         //assert
-        assertTrue(actual);
-    }
-
-    @Test
-    void playerHasPermissionOfMethod() throws NoSuchMethodException {
-        //arrange
-        when(player.hasPermission("plugin.class.method")).thenReturn(true);
-
-        //act
-        var actual = sut.playerHasPermission(player, CommandClassSingleMethod.class.getMethod("onCommand", CommandSender.class, Command.class, String[].class));
-
-        //assert
-        assertTrue(actual);
-    }
-
-    @Test
-    void playerHasPermissionOfMethodWithoutPermissionOnMethodThrowsNoPermissionFoundException() {
-        //arrange
-        plugin = mock(YukikasePlugin.class);
-        sut = new DefaultPermissionHandler(plugin);
-
-        //assert
-        var exception = assertThrows(NoPermissionFoundException.class, () -> {
+        assertThrows(NoPermissionRegisterFound.class, () -> {
             //act
-            sut.playerHasPermission(player, CommandClassWithAliasAndSubCommands.class.getMethod("onCommand", CommandSender.class, Command.class, String[].class));
+            sut.getPermission("TEST_BASE");
         });
-
-        assertEquals(String.format(NoPermissionFoundException.METHOD_DOES_NOT_HAVE_PERMISSION, "onCommand"), exception.getMessage());
-    }
-
-    @Test
-    void playerHasPermissionOfMethodWithIgnorePrefix() throws NoSuchMethodException {
-        //arrange
-        when(player.hasPermission("method")).thenReturn(true);
-
-        //act
-        var actual = sut.playerHasPermission(player, CommandClassWithAliasAndSubCommands.class.getMethod("onAlias", CommandSender.class, Command.class, String[].class));
-
-        //assert
-        assertTrue(actual);
-    }
-
-    @Test
-    void playerHasPermissionOfClassWithAdditionalArgs() {
-        //arrange
-        when(player.hasPermission("plugin.class.add1.add2")).thenReturn(true);
-
-        //act
-        var actual = sut.playerHasPermission(player, CommandClassSingleMethod.class, "add1", "add2");
-
-        //assert
-        assertTrue(actual);
     }
 }

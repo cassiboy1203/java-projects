@@ -1,7 +1,7 @@
 package com.yukikase.staffmanager.core.staffmode;
 
-import com.yukikase.lib.IPermissionHandler;
-import com.yukikase.staffmanager.core.commands.StaffCommand;
+import com.yukikase.lib.permission.IPermissionHandler;
+import com.yukikase.staffmanager.core.PermissionRegister;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,8 +60,8 @@ class StaffModeTest {
 
         when(player.getUniqueId()).thenReturn(uuid);
 
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.GODMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.FLY_PERMISSON)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GOD)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_FLY)).thenReturn(true);
 
         //act
         var actual = sut.enterStaffMode(player);
@@ -80,8 +80,8 @@ class StaffModeTest {
 
         when(player.getUniqueId()).thenReturn(uuid);
 
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.GODMODE_PERMISSION)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.FLY_PERMISSON)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GOD)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_FLY)).thenReturn(false);
 
         //act
         var actual = sut.enterStaffMode(player);
@@ -100,8 +100,8 @@ class StaffModeTest {
 
         when(player.getUniqueId()).thenReturn(uuid);
 
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.GODMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.FLY_PERMISSON)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GOD)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_FLY)).thenReturn(false);
 
         //act
         var actual = sut.enterStaffMode(player);
@@ -120,8 +120,8 @@ class StaffModeTest {
 
         when(player.getUniqueId()).thenReturn(uuid);
 
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.GODMODE_PERMISSION)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, StaffCommand.class, IStaffMode.FLY_PERMISSON)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GOD)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_FLY)).thenReturn(true);
 
         //act
         var actual = sut.enterStaffMode(player);

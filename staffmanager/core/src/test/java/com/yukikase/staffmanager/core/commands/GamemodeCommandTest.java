@@ -1,14 +1,16 @@
 package com.yukikase.staffmanager.core.commands;
 
-import com.yukikase.lib.IPermissionHandler;
 import com.yukikase.lib.exceptions.InvalidCommandUsageException;
 import com.yukikase.lib.exceptions.PlayerNotFoundException;
 import com.yukikase.lib.exceptions.UnauthorizedException;
+import com.yukikase.lib.permission.IPermissionHandler;
+import com.yukikase.staffmanager.core.PermissionRegister;
 import com.yukikase.staffmanager.core.staffmode.IStaffMode;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-//TODO: test for non player
 class GamemodeCommandTest {
     private GamemodeCommand sut;
 
@@ -63,7 +64,7 @@ class GamemodeCommandTest {
         //assert
         assertThrows(InvalidCommandUsageException.class, () -> {
             //act
-            sut.onCommand(player, command, new String[0]);
+            sut.onCommand(player, new String[0]);
         });
     }
 
@@ -73,7 +74,7 @@ class GamemodeCommandTest {
         when(staffMode.isInStaffMode(player)).thenReturn(true);
 
         //act
-        sut.onCreative(player, command, new String[0]);
+        sut.onCreative(player, new String[0]);
 
         //assert
         verify(player).setGameMode(GameMode.CREATIVE);
@@ -86,7 +87,7 @@ class GamemodeCommandTest {
         when(staffMode.isInStaffMode(player)).thenReturn(true);
 
         //act
-        sut.onSurvival(player, command, new String[0]);
+        sut.onSurvival(player, new String[0]);
 
         //assert
         verify(player).setGameMode(GameMode.SURVIVAL);
@@ -99,7 +100,7 @@ class GamemodeCommandTest {
         when(staffMode.isInStaffMode(player)).thenReturn(true);
 
         //act
-        sut.onSpectator(player, command, new String[0]);
+        sut.onSpectator(player, new String[0]);
 
         //assert
         verify(player).setGameMode(GameMode.SPECTATOR);
@@ -112,7 +113,7 @@ class GamemodeCommandTest {
         when(staffMode.isInStaffMode(player)).thenReturn(true);
 
         //act
-        sut.onAdventure(player, command, new String[0]);
+        sut.onAdventure(player, new String[0]);
 
         //assert
         verify(player).setGameMode(GameMode.ADVENTURE);
@@ -123,10 +124,10 @@ class GamemodeCommandTest {
     void testChangeGamemodePlayerNotInStaffMode() {
         //arrange
         when(staffMode.isInStaffMode(player)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(true);
 
         //act
-        sut.onCreative(player, command, new String[0]);
+        sut.onCreative(player, new String[0]);
 
         //assert
         verify(player).setGameMode(GameMode.CREATIVE);
@@ -137,13 +138,54 @@ class GamemodeCommandTest {
     void testChangeGamemodePlayerNotInStaffModeAndNoPermissionThrowsUnauthorizedException() {
         //arrange
         when(staffMode.isInStaffMode(player)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(false);
 
         //assert
         assertThrows(UnauthorizedException.class, () -> {
             //act
-            sut.onCreative(player, command, new String[0]);
+            sut.onCreative(player, new String[0]);
         });
+    }
+
+    @Test
+    void testChangeGamemodeOtherPlayerPlayerInStaffMode() {
+        //arrange
+        var otherPlayer = mock(Player.class);
+
+        when(staffMode.isInStaffMode(player)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GAMEMODE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GAMEMODE_OTHER)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(false);
+
+        bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
+
+        //act
+        sut.onCreative(player, new String[]{"other"});
+
+        //assert
+        verify(otherPlayer).setGameMode(GameMode.CREATIVE);
+    }
+
+    @Test
+    void testChangeGamemodePlayerInStaffModeAndNoPermissionToChangeOtherThrowsUnauthorizedException() {
+        //arrange
+        var otherPlayer = mock(Player.class);
+
+        when(staffMode.isInStaffMode(player)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GAMEMODE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GAMEMODE_OTHER)).thenReturn(false);
+
+        bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
+
+        //assert
+        assertThrows(UnauthorizedException.class, () -> {
+            //act
+            sut.onCreative(player, new String[]{"other"});
+        });
+
+        verify(otherPlayer, never()).setGameMode(GameMode.CREATIVE);
     }
 
     @Test
@@ -152,14 +194,13 @@ class GamemodeCommandTest {
         var otherPlayer = mock(Player.class);
 
         when(staffMode.isInStaffMode(player)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, IStaffMode.PERMISSION, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(true);
 
         bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
 
         //act
-        sut.onCreative(player, command, new String[]{"other"});
+        sut.onCreative(player, new String[]{"other"});
 
         //assert
         verify(otherPlayer).setGameMode(GameMode.CREATIVE);
@@ -172,16 +213,15 @@ class GamemodeCommandTest {
         var otherPlayer = mock(Player.class);
 
         when(staffMode.isInStaffMode(player)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, IStaffMode.PERMISSION, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(true);
 
         bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(null);
 
         //assert
         assertThrows(PlayerNotFoundException.class, () -> {
             //act
-            sut.onCreative(player, command, new String[]{"other"});
+            sut.onCreative(player, new String[]{"other"});
         });
 
         verify(player, never()).setGameMode(GameMode.CREATIVE);
@@ -195,16 +235,15 @@ class GamemodeCommandTest {
         var otherPlayer = mock(Player.class);
 
         when(staffMode.isInStaffMode(player)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, IStaffMode.PERMISSION, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(true);
 
         bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
 
         //assert
         assertThrows(InvalidCommandUsageException.class, () -> {
             //act
-            sut.onCreative(player, command, new String[]{"other", "arg2"});
+            sut.onCreative(player, new String[]{"other", "arg2"});
         });
 
         verify(player, never()).setGameMode(GameMode.CREATIVE);
@@ -218,16 +257,16 @@ class GamemodeCommandTest {
         var otherPlayer = mock(Player.class);
 
         when(staffMode.isInStaffMode(player)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, IStaffMode.PERMISSION, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GAMEMODE_OTHER)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(true);
 
         bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
 
         //assert
         var exception = assertThrows(UnauthorizedException.class, () -> {
             //act
-            sut.onCreative(player, command, new String[]{"other"});
+            sut.onCreative(player, new String[]{"other"});
         });
 
         assertEquals(GamemodeCommand.PLAYER_NO_PERMISSON_GAMEMODE_OTHER_STAFF, exception.getMessage());
@@ -243,21 +282,48 @@ class GamemodeCommandTest {
         var otherPlayer = mock(Player.class);
 
         when(staffMode.isInStaffMode(player)).thenReturn(false);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, IStaffMode.PERMISSION, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(true);
-        when(permissionHandler.playerHasPermission(player, GamemodeCommand.GAMEMODE_PERMISSION, GamemodeCommand.GAMEMODE_OTHER)).thenReturn(false);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GAMEMODE_OTHER)).thenReturn(true);
+        when(permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER)).thenReturn(false);
 
         bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
 
         //assert
         var exception = assertThrows(UnauthorizedException.class, () -> {
             //act
-            sut.onCreative(player, command, new String[]{"other"});
+            sut.onCreative(player, new String[]{"other"});
         });
 
         assertEquals(GamemodeCommand.PLAYER_NO_PERMISSION_GAMEMODE_OTHER, exception.getMessage());
 
         verify(player, never()).setGameMode(GameMode.CREATIVE);
         verify(otherPlayer, never()).setGameMode(GameMode.CREATIVE);
+    }
+
+    @Test
+    void testChangeGamemodeWithNonPlayerSender() {
+        //arrange
+        var sender = mock(CommandSender.class);
+        var otherPlayer = mock(Player.class);
+
+        bukkit.when(() -> Bukkit.getPlayer("other")).thenReturn(otherPlayer);
+
+        //act
+        sut.onCreative(sender, new String[]{"other"});
+
+        //assert
+        verify(otherPlayer).setGameMode(GameMode.CREATIVE);
+    }
+
+    @Test
+    void testChangeGamemodeWithNonPlayerSenderWithoutArgumentThrowsInvalidCommandException() {
+        //arrange
+        var sender = mock(CommandSender.class);
+
+        //assert
+        assertThrows(InvalidCommandUsageException.class, () -> {
+            //act
+            sut.onCreative(sender, new String[0]);
+        });
     }
 }

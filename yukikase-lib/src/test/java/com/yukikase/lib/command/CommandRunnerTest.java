@@ -1,12 +1,11 @@
 package com.yukikase.lib.command;
 
-import com.yukikase.lib.IPermissionHandler;
 import com.yukikase.lib.YukikasePlugin;
 import com.yukikase.lib.exceptions.UnauthorizedException;
-import com.yukikase.lib.testclasses.CommandClassManualPermission;
+import com.yukikase.lib.permission.IPermissionHandler;
 import com.yukikase.lib.testclasses.CommandClassSingleMethod;
 import com.yukikase.lib.testclasses.CommandClassWithAliasAndSubCommands;
-import org.bukkit.command.Command;
+import com.yukikase.lib.testclasses.PermissionRegisterTest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,7 +24,6 @@ class CommandRunnerTest {
     private CommandRunner sut;
 
     private IPermissionHandler permissionHandler;
-    private Command bucketCommand;
     private YukikasePlugin plugin;
 
     private static Stream<Arguments> commandInput() {
@@ -43,7 +40,6 @@ class CommandRunnerTest {
     @BeforeEach
     void setup() {
         permissionHandler = mock(IPermissionHandler.class);
-        bucketCommand = mock(Command.class);
         plugin = mock(YukikasePlugin.class);
     }
 
@@ -55,13 +51,11 @@ class CommandRunnerTest {
         var command = spy(CommandClassSingleMethod.class);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(true);
-
         //act
-        sut.onCommand(sender, bucketCommand, "command", new String[]{});
+        sut.execute(sender, "command", new String[]{});
 
         //assert
-        verify(command).onCommand(sender, bucketCommand, new String[]{});
+        verify(command).onCommand(sender, new String[]{});
     }
 
     @Test
@@ -72,13 +66,11 @@ class CommandRunnerTest {
         var command = spy(CommandClassWithAliasAndSubCommands.class);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(true);
-
         //act
-        sut.onCommand(sender, bucketCommand, "alias", new String[]{});
+        sut.execute(sender, "alias", new String[]{});
 
         //assert
-        verify(command).onAlias(sender, bucketCommand, new String[]{});
+        verify(command).onAlias(sender, new String[]{});
     }
 
     @Test
@@ -89,13 +81,11 @@ class CommandRunnerTest {
         var command = spy(CommandClassWithAliasAndSubCommands.class);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(true);
-
         //act
-        sut.onCommand(sender, bucketCommand, "command", new String[]{});
+        sut.execute(sender, "command", new String[]{});
 
         //assert
-        verify(command).onCommand(sender, bucketCommand, new String[]{});
+        verify(command).onCommand(sender, new String[]{});
     }
 
     @Test
@@ -104,15 +94,16 @@ class CommandRunnerTest {
         var sender = mock(Player.class);
 
         var command = spy(CommandClassWithAliasAndSubCommands.class);
+        when(permissionHandler.getPermission("TEST_BASE")).thenReturn(PermissionRegisterTest.TEST_BASE);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(true);
+        when(permissionHandler.playerHasPermission(sender, PermissionRegisterTest.TEST_BASE)).thenReturn(true);
 
         //act
-        sut.onCommand(sender, bucketCommand, "command", new String[]{"sub"});
+        sut.execute(sender, "command", new String[]{"sub"});
 
         //assert
-        verify(command).onSubCommand(sender, bucketCommand, new String[]{});
+        verify(command).onSubCommand(sender, new String[]{});
     }
 
     @Test
@@ -123,13 +114,11 @@ class CommandRunnerTest {
         var command = spy(CommandClassWithAliasAndSubCommands.class);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(true);
-
         //act
-        sut.onCommand(sender, bucketCommand, "alias", new String[]{"sub2"});
+        sut.execute(sender, "alias", new String[]{"sub2"});
 
         //assert
-        verify(command).onSubCommandWithAlias(sender, bucketCommand, new String[]{});
+        verify(command).onSubCommandWithAlias(sender, new String[]{});
     }
 
     @Test
@@ -138,18 +127,18 @@ class CommandRunnerTest {
         var sender = mock(Player.class);
 
         var command = spy(CommandClassWithAliasAndSubCommands.class);
+        when(permissionHandler.getPermission(anyString())).thenReturn(PermissionRegisterTest.TEST_BASE);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(false);
-
+        when(permissionHandler.playerHasPermission(sender, PermissionRegisterTest.TEST_BASE)).thenReturn(false);
 
         //assert
         assertThrows(UnauthorizedException.class, () -> {
             //act
-            sut.onCommand(sender, bucketCommand, "command", new String[]{});
+            sut.execute(sender, "command", new String[]{"sub"});
         });
 
-        verify(command, never()).onCommand(sender, bucketCommand, new String[]{});
+        verify(command, never()).onCommand(sender, new String[]{});
     }
 
     @Test
@@ -161,41 +150,11 @@ class CommandRunnerTest {
         sut = new CommandRunner(command, permissionHandler, plugin);
 
         //act
-        sut.onCommand(sender, bucketCommand, "command", new String[]{});
+        sut.execute(sender, "command", new String[]{});
 
         //assert
-        verify(command).onCommand(sender, bucketCommand, new String[]{});
+        verify(command).onCommand(sender, new String[]{});
         verify(sender, never()).hasPermission(anyString());
-    }
-
-    @Test
-    void testOnCommandWithMethodPermissionSetToManual() {
-        //arrange
-        var sender = mock(Player.class);
-
-        var command = spy(CommandClassWithAliasAndSubCommands.class);
-        sut = new CommandRunner(command, permissionHandler, plugin);
-
-        //act
-        sut.onCommand(sender, bucketCommand, "manual", new String[]{});
-
-        //assert
-        verify(permissionHandler, never()).playerHasPermission(eq(sender), any(Method.class));
-    }
-
-    @Test
-    void testOnCommandWithCommandPermissionSetToManual() {
-        //arrange
-        var sender = mock(Player.class);
-
-        var command = spy(CommandClassManualPermission.class);
-        sut = new CommandRunner(command, permissionHandler, plugin);
-
-        //act
-        sut.onCommand(sender, bucketCommand, "manual", new String[]{});
-
-        //assert
-        verify(permissionHandler, never()).playerHasPermission(eq(sender), any(Method.class));
     }
 
     @ParameterizedTest
@@ -207,12 +166,10 @@ class CommandRunnerTest {
         var command = spy(CommandClassWithAliasAndSubCommands.class);
         sut = new CommandRunner(command, permissionHandler, plugin);
 
-        when(permissionHandler.playerHasPermission(eq(sender), any(Method.class))).thenReturn(true);
-
         //act
-        sut.onCommand(sender, bucketCommand, input, args);
+        sut.execute(sender, input, args);
 
         //assert
-        verify(command).onMultiple(sender, bucketCommand, new String[0]);
+        verify(command).onMultiple(sender, new String[0]);
     }
 }

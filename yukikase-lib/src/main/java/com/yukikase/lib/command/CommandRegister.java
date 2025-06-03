@@ -2,10 +2,12 @@ package com.yukikase.lib.command;
 
 import com.yukikase.diframework.anotations.Configuration;
 import com.yukikase.diframework.anotations.Register;
-import com.yukikase.lib.IPermissionHandler;
 import com.yukikase.lib.YukikasePlugin;
 import com.yukikase.lib.interfaces.ICommand;
-import org.bukkit.command.CommandExecutor;
+import com.yukikase.lib.permission.IPermissionHandler;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandMap;
+import org.bukkit.command.defaults.BukkitCommand;
 
 import java.util.List;
 
@@ -16,9 +18,17 @@ public class CommandRegister {
     public void registerCommands(List<ICommand> commands, YukikasePlugin plugin, IPermissionHandler permissionHandler) {
         for (var command : commands) {
 
-            CommandExecutor executor = new CommandRunner(command, permissionHandler, plugin);
+            BukkitCommand executor = new CommandRunner(command, permissionHandler, plugin);
 
-            plugin.getCommand(command.name()).setExecutor(executor);
+            try {
+                var f = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+                f.setAccessible(true);
+
+                var map = (CommandMap) f.get(Bukkit.getServer());
+                map.register(executor.getName(), executor);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
