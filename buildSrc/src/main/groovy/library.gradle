@@ -1,0 +1,22 @@
+plugins {
+    id 'java-library'
+    id 'versioning'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri('https://maven.pkg.github.com/cassiboy1203/java-projects')
+    }
+
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.1'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+}
+
+test{
+    useJUnitPlatform()
+}

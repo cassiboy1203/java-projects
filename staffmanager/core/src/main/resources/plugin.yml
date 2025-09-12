@@ -1,5 +1,5 @@
 name: StaffmanagerCore
-version: ${project.version}
+version: ${version}
 main: com.yukikase.staffmanager.core.StaffManagerCore
 api-version: '1.21'
 authors:

@@ -1,0 +1,8 @@
+# Uncomment this for database connection
+#database:
+## Valid types: MYSQL
+#  type: MYSQL
+#  host: localhost
+#  port: 3306
+#  username: root
+#  password:

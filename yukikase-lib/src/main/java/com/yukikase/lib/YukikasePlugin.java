@@ -1,13 +1,22 @@
 package com.yukikase.lib;
 
-import com.yukikase.diframework.Injector;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.yukikase.framework.injection.Injector;
+import com.yukikase.lib.packet.event.PacketEvent;
+import com.yukikase.lib.task.Task;
+import com.yukikase.lib.task.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public abstract class YukikasePlugin extends JavaPlugin {
     protected Injector injector;
+    private final Map<Timer, BukkitTask> runningTimers = new HashMap<>();
 
     public final void useClassLoader() {
         Thread.currentThread().setContextClassLoader(getClassLoader());
@@ -20,6 +29,9 @@ public abstract class YukikasePlugin extends JavaPlugin {
     @Override
     public final void onDisable() {
         doDisable();
+        for (var timer : runningTimers.values()) {
+            timer.cancel();
+        }
     }
 
     @Override
@@ -45,5 +57,72 @@ public abstract class YukikasePlugin extends JavaPlugin {
         }
 
         return lib.registerPlugin(this);
+    }
+
+    public boolean databaseEnabled() {
+        return false;
+    }
+
+    public final void startTimer(Timer timer) {
+        var runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                timer.run();
+                if (timer.isCancelled()) {
+                    cancel();
+                    runningTimers.remove(timer);
+                }
+            }
+        }.runTaskTimer(this, timer.getDelay(), timer.getInterval());
+
+        runningTimers.put(timer, runnable);
+    }
+
+    public final void startTimerAsync(Timer timer) {
+        var runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                timer.run();
+                if (timer.isCancelled()) {
+                    cancel();
+                    runningTimers.remove(timer);
+                }
+            }
+        }.runTaskTimerAsynchronously(this, timer.getDelay(), timer.getInterval());
+    }
+
+    public final void startTask(Task task) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                task.run();
+                if (task.isCancelled()) {
+                    cancel();
+                }
+            }
+        }.runTaskLater(this, task.getDelay());
+    }
+
+    public final void startTaskAsync(Task task) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                task.run();
+                if (task.isCancelled()) {
+                    cancel();
+                }
+            }
+        }.runTaskLaterAsynchronously(this, task.getDelay());
+    }
+
+    public final <T> T getInstance(Class<T> clazz) {
+        return injector.getInstance(clazz);
+    }
+
+    public final void writePacket(PacketEvent event) {
+        var manager = ProtocolLibrary.getProtocolManager();
+        var packet = manager.createPacket(event.getPacketType());
+        packet = event.write(packet);
+        manager.sendServerPacket(event.player(), packet);
     }
 }

@@ -2,4 +2,8 @@ di-framework:
   - "*"
 yukikase-lib:
   - staffmanager-core
+  - pickaxe
 staffmanager-core: [ ]
+rpg-prison-core:
+  - rpg-prison-pickaxe
+rpg-prison-pickaxe: [ ]

@@ -1,0 +1,9 @@
+name: RpgPrisonPickaxe
+version: ${version}
+main: com.yukikase.rpg.prison.pickaxe.RpgPrisonPickaxe
+api-version: '1.21'
+authors:
+  - ゆきかせ
+depend:
+  - YukikaseLib
+  - RpgPrisonCore

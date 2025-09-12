@@ -1,0 +1,36 @@
+
+
+plugins {
+    id 'plugin'
+}
+dependencies {
+    compileOnly project(":yukikase-lib")
+}
+
+tasks.register("deploy", Jar){
+    from sourceSets.main.output
+    archiveBaseName.set(project.path.replace(":", "-").substring(1))
+    archiveVersion.set(version)
+
+    if (!System.getenv("CI")){
+        destinationDirectory.set(rootProject.file("server/plugins"))
+    }
+
+    def version = project.version
+
+    doFirst {
+        def outDir = destinationDirectory.get().asFile
+        def base = archiveBaseName.get()
+        if (outDir.exists()){
+            outDir.listFiles()
+                    .findAll() { it.name.startsWith(base) && it.name.endsWith(".jar")}
+                    .each {
+                        it.delete()
+                    }
+        }
+
+        filesMatching('plugin.yml') {
+            expand(version: version)
+        }
+    }
+}

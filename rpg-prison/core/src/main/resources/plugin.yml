@@ -1,0 +1,8 @@
+name: RpgPrisonCore
+version: ${version}
+main: com.yukikase.rpg.prison.core.RpgPrisonCore
+api-version: '1.21'
+authors:
+  - ゆきかせ
+depend:
+  - YukikaseLib

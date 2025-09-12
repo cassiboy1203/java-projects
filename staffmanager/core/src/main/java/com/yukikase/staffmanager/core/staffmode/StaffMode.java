@@ -1,8 +1,8 @@
 package com.yukikase.staffmanager.core.staffmode;
 
-import com.yukikase.diframework.anotations.Component;
-import com.yukikase.diframework.anotations.Inject;
-import com.yukikase.diframework.anotations.Singleton;
+import com.yukikase.framework.anotations.injection.Component;
+import com.yukikase.framework.anotations.injection.Inject;
+import com.yukikase.framework.anotations.injection.Singleton;
 import com.yukikase.lib.permission.IPermissionHandler;
 import com.yukikase.staffmanager.core.PermissionRegister;
 import org.bukkit.entity.Player;

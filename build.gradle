@@ -1,0 +1,13 @@
+group = 'com.yukikase'
+
+tasks.register("deploy") {
+    dependsOn(subprojects.collect {
+        it.tasks.matching { it.name == "deploy"}
+    })
+}
+
+tasks.register("test") {
+    dependsOn(subprojects.collect {
+        it.tasks.matching { it.name == "test"}
+    })
+}

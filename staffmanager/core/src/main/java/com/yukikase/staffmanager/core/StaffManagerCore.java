@@ -1,6 +1,6 @@
 package com.yukikase.staffmanager.core;
 
-import com.yukikase.diframework.anotations.Singleton;
+import com.yukikase.framework.anotations.injection.Singleton;
 import com.yukikase.lib.YukikasePlugin;
 
 @Singleton

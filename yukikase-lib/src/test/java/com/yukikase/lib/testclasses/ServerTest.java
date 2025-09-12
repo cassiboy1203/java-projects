@@ -1,5 +1,16 @@
 package com.yukikase.lib.testclasses;
 
+import com.destroystokyo.paper.entity.ai.MobGoals;
+import io.papermc.paper.ban.BanListType;
+import io.papermc.paper.configuration.ServerConfiguration;
+import io.papermc.paper.datapack.DatapackManager;
+import io.papermc.paper.math.Position;
+import io.papermc.paper.threadedregions.scheduler.AsyncScheduler;
+import io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler;
+import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.block.data.BlockData;
@@ -14,6 +25,7 @@ import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.help.HelpMap;
 import org.bukkit.inventory.*;
 import org.bukkit.loot.LootTable;
+import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapView;
 import org.bukkit.packs.DataPackManager;
 import org.bukkit.packs.ResourcePack;
@@ -21,12 +33,15 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.messaging.Messenger;
+import org.bukkit.potion.PotionBrewer;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.structure.StructureManager;
 import org.bukkit.util.CachedServerIcon;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -46,6 +61,11 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public @NotNull File getPluginsFolder() {
+        return null;
+    }
+
+    @Override
     public String getName() {
         return "";
     }
@@ -57,6 +77,11 @@ public class ServerTest implements Server {
 
     @Override
     public String getBukkitVersion() {
+        return "";
+    }
+
+    @Override
+    public @NotNull String getMinecraftVersion() {
         return "";
     }
 
@@ -276,6 +301,11 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public @Nullable UUID getPlayerUniqueId(@NotNull String s) {
+        return null;
+    }
+
+    @Override
     public PluginManager getPluginManager() {
         return null;
     }
@@ -293,6 +323,11 @@ public class ServerTest implements Server {
     @Override
     public List<World> getWorlds() {
         return List.of();
+    }
+
+    @Override
+    public boolean isTickingWorlds() {
+        return false;
     }
 
     @Override
@@ -317,6 +352,11 @@ public class ServerTest implements Server {
 
     @Override
     public World getWorld(UUID uuid) {
+        return null;
+    }
+
+    @Override
+    public @Nullable World getWorld(@NotNull Key key) {
         return null;
     }
 
@@ -346,12 +386,27 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public @Nullable ItemStack createExplorerMap(@NotNull World world, @NotNull Location location, org.bukkit.generator.structure.@NotNull StructureType structureType, MapCursor.@NotNull Type type, int i, boolean b) {
+        return null;
+    }
+
+    @Override
     public void reload() {
 
     }
 
     @Override
     public void reloadData() {
+
+    }
+
+    @Override
+    public void updateResources() {
+
+    }
+
+    @Override
+    public void updateRecipes() {
 
     }
 
@@ -377,6 +432,11 @@ public class ServerTest implements Server {
 
     @Override
     public boolean addRecipe(Recipe recipe) {
+        return false;
+    }
+
+    @Override
+    public boolean addRecipe(@Nullable Recipe recipe, boolean b) {
         return false;
     }
 
@@ -436,6 +496,11 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public boolean removeRecipe(@NotNull NamespacedKey namespacedKey, boolean b) {
+        return false;
+    }
+
+    @Override
     public Map<String, String[]> getCommandAliases() {
         return Map.of();
     }
@@ -476,6 +541,11 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public @NotNull ServerConfiguration getServerConfig() {
+        return null;
+    }
+
+    @Override
     public boolean getAllowFlight() {
         return false;
     }
@@ -496,7 +566,17 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public int broadcast(@NotNull Component component, @NotNull String s) {
+        return 0;
+    }
+
+    @Override
     public OfflinePlayer getOfflinePlayer(String s) {
+        return null;
+    }
+
+    @Override
+    public @Nullable OfflinePlayer getOfflinePlayerIfCached(@NotNull String s) {
         return null;
     }
 
@@ -556,6 +636,11 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public <B extends BanList<E>, E> @NotNull B getBanList(@NotNull BanListType<B> banListType) {
+        return null;
+    }
+
+    @Override
     public Set<OfflinePlayer> getOperators() {
         return Set.of();
     }
@@ -571,7 +656,17 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public boolean forcesDefaultGameMode() {
+        return false;
+    }
+
+    @Override
     public ConsoleCommandSender getConsoleSender() {
+        return null;
+    }
+
+    @Override
+    public @NotNull CommandSender createCommandSender(@NotNull Consumer<? super Component> consumer) {
         return null;
     }
 
@@ -601,6 +696,11 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public @NotNull Inventory createInventory(@Nullable InventoryHolder inventoryHolder, @NotNull InventoryType inventoryType, @NotNull Component component) {
+        return null;
+    }
+
+    @Override
     public Inventory createInventory(InventoryHolder inventoryHolder, InventoryType inventoryType, String s) {
         return null;
     }
@@ -611,12 +711,27 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public @NotNull Inventory createInventory(@Nullable InventoryHolder inventoryHolder, int i, @NotNull Component component) throws IllegalArgumentException {
+        return null;
+    }
+
+    @Override
     public Inventory createInventory(InventoryHolder inventoryHolder, int i, String s) throws IllegalArgumentException {
         return null;
     }
 
     @Override
+    public @NotNull Merchant createMerchant(@Nullable Component component) {
+        return null;
+    }
+
+    @Override
     public Merchant createMerchant(String s) {
+        return null;
+    }
+
+    @Override
+    public Merchant createMerchant() {
         return null;
     }
 
@@ -663,6 +778,21 @@ public class ServerTest implements Server {
     @Override
     public boolean isPrimaryThread() {
         return false;
+    }
+
+    @Override
+    public @NotNull Component motd() {
+        return null;
+    }
+
+    @Override
+    public void motd(@NotNull Component component) {
+
+    }
+
+    @Override
+    public @Nullable Component shutdownMessage() {
+        return null;
     }
 
     @Override
@@ -736,6 +866,16 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public int getPauseWhenEmptyTime() {
+        return 0;
+    }
+
+    @Override
+    public void setPauseWhenEmptyTime(int i) {
+
+    }
+
+    @Override
     public ChunkGenerator.ChunkData createChunkData(World world) {
         return null;
     }
@@ -768,6 +908,21 @@ public class ServerTest implements Server {
     @Override
     public Entity getEntity(UUID uuid) {
         return null;
+    }
+
+    @Override
+    public double @NotNull [] getTPS() {
+        return new double[0];
+    }
+
+    @Override
+    public long @NotNull [] getTickTimes() {
+        return new long[0];
+    }
+
+    @Override
+    public double getAverageTickTime() {
+        return 0;
     }
 
     @Override
@@ -841,6 +996,151 @@ public class ServerTest implements Server {
     }
 
     @Override
+    public void restart() {
+
+    }
+
+    @Override
+    public void reloadPermissions() {
+
+    }
+
+    @Override
+    public boolean reloadCommandAliases() {
+        return false;
+    }
+
+    @Override
+    public boolean suggestPlayerNamesWhenNullTabCompletions() {
+        return false;
+    }
+
+    @Override
+    public @NotNull String getPermissionMessage() {
+        return "";
+    }
+
+    @Override
+    public @NotNull Component permissionMessage() {
+        return null;
+    }
+
+    @Override
+    public com.destroystokyo.paper.profile.@NotNull PlayerProfile createProfile(@NotNull UUID uuid) {
+        return null;
+    }
+
+    @Override
+    public com.destroystokyo.paper.profile.@NotNull PlayerProfile createProfile(@NotNull String s) {
+        return null;
+    }
+
+    @Override
+    public com.destroystokyo.paper.profile.@NotNull PlayerProfile createProfile(@Nullable UUID uuid, @Nullable String s) {
+        return null;
+    }
+
+    @Override
+    public com.destroystokyo.paper.profile.@NotNull PlayerProfile createProfileExact(@Nullable UUID uuid, @Nullable String s) {
+        return null;
+    }
+
+    @Override
+    public int getCurrentTick() {
+        return 0;
+    }
+
+    @Override
+    public boolean isStopping() {
+        return false;
+    }
+
+    @Override
+    public @NotNull MobGoals getMobGoals() {
+        return null;
+    }
+
+    @Override
+    public @NotNull DatapackManager getDatapackManager() {
+        return null;
+    }
+
+    @Override
+    public @NotNull PotionBrewer getPotionBrewer() {
+        return null;
+    }
+
+    @Override
+    public @NotNull RegionScheduler getRegionScheduler() {
+        return null;
+    }
+
+    @Override
+    public @NotNull AsyncScheduler getAsyncScheduler() {
+        return null;
+    }
+
+    @Override
+    public @NotNull GlobalRegionScheduler getGlobalRegionScheduler() {
+        return null;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull World world, @NotNull Position position) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull World world, @NotNull Position position, int i) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull Location location) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull Location location, int i) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull World world, int i, int i1) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull World world, int i, int i1, int i2) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull World world, int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(@NotNull Entity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean isGlobalTickThread() {
+        return false;
+    }
+
+    @Override
+    public boolean isPaused() {
+        return false;
+    }
+
+    @Override
+    public void allowPausing(@NotNull Plugin plugin, boolean b) {
+
+    }
+
+    @Override
     public void sendPluginMessage(Plugin plugin, String s, byte[] bytes) {
 
     }
@@ -848,5 +1148,10 @@ public class ServerTest implements Server {
     @Override
     public Set<String> getListeningPluginChannels() {
         return Set.of();
+    }
+
+    @Override
+    public @NotNull Iterable<? extends Audience> audiences() {
+        return null;
     }
 }

@@ -1,7 +1,7 @@
 package com.yukikase.staffmanager.core.commands;
 
-import com.yukikase.diframework.anotations.Component;
-import com.yukikase.diframework.anotations.Inject;
+import com.yukikase.framework.anotations.injection.Component;
+import com.yukikase.framework.anotations.injection.Inject;
 import com.yukikase.lib.annotations.command.Alias;
 import com.yukikase.lib.exceptions.InvalidCommandUsageException;
 import com.yukikase.lib.exceptions.PlayerNotFoundException;

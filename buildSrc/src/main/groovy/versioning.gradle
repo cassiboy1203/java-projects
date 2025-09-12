@@ -1,0 +1,197 @@
+boolean isCi = System.getenv("CI")
+if (!isCi){
+    version = file("version.info").text.trim() + "-SNAPSHOT"
+} else {
+    def buildNumber = System.getenv("GITHUB_RUN_NUMBER")
+    switch (System.getenv("env")){
+        case "master":
+            version = file("version.info").text.trim()
+            break
+        case "rc":
+            version = file("version.info").text.trim() + "-rc_${buildNumber}"
+            break
+        default:
+            version = file("version.info").text.trim() + "-dev_${buildNumber}"
+    }
+}
+
+tasks.register("versioning"){
+    String projectName = project.name
+    doLast {
+        def getScope = {String message ->
+            def types = [
+                    "fix" ,
+                    "feat" ,
+                    "build" ,
+                    "ci" ,
+                    "docs" ,
+                    "perf" ,
+                    "refactor" ,
+                    "test"
+            ]
+
+            types.each { String t ->
+                if (message.startsWith(t)) {
+                    return message[t.length() + 1..message.indexOf(':') + 1]
+                }
+            }
+
+            return null
+        }
+
+        def determineBump = {String msg ->
+            if (msg.contains("BREAKING CHANGE")) {
+                return "major"
+            } else if (msg.startsWith("feat")) {
+                return "minor"
+            } else if (msg.startsWith("fix")) {
+                return "patch"
+            }
+        }
+
+        def getVersion = {Version currentVersion, commits, scope ->
+            int major = 0
+            int minor = 0
+            int patch = 0
+
+            commits.each { String msg ->
+                String messageScope = getScope(msg)
+                String[] scopes = []
+                if (messageScope != null) {
+                    scopes = messageScope.split(',')
+                }
+
+                if (scopes.length > 1 && !scopes.contains(scope)) {
+                    return
+                }
+
+                String bump = determineBump(msg)
+                switch (bump) {
+                    case "major":
+                        major += 1
+                        break
+                    case "minor":
+                        minor += 1
+                        break
+                    case "patch":
+                        patch += 1
+                        break
+                }
+            }
+
+            if (major > 0) {
+                currentVersion.bumpMajor()
+            } else if (minor > 1) {
+                currentVersion.bumpMinor()
+            } else if (currentVersion.patch) {
+                currentVersion.bumpPatch()
+            }
+
+            return currentVersion
+        }
+
+        def lastTag = {String project ->
+            def cmd = ["git", "tag", "--list", "${project}_*", "--sort=-v:refname"]
+            def proc = cmd.execute()
+            proc.waitFor()
+            def tags = proc.in.text.readLines()
+            return tags ? tags.get(0) : null
+        }
+
+        def lastTagWithCommit = {String project, String commit ->
+            def cmd = ["git", "tag", "--list", "${project}_*", "--sort=-v:refname", "${commit}"]
+            def proc = cmd.execute()
+            proc.waitFor()
+            def tags = proc.in.text.readLines()
+            return tags ? tags.get(0) : null
+        }
+
+        def commits = {tag ->
+            if (tag == null) {
+                return "git log --pretty=%s".execute().text.readLines()
+            } else {
+                return "git log --pretty=%s ${tag}..HEAD".execute().text.readLines()
+            }
+        }
+        if (!System.getenv("CI")) {
+            println("Not in ci environment")
+            return
+        }
+
+        def tag = lastTag(projectName)
+
+        def mainCommit = "git rev-parse origin/master".execute().text.trim()
+        def mainVersion = new Version(lastTagWithCommit(projectName, mainCommit).replace("${projectName}_", ""), null)
+        def version = new Version(tag.replace("${projectName}_", ""), mainVersion)
+
+        def newVersion = getVersion(version, commits(tag), projectName)
+
+        println(newVersion.toString())
+    }
+}
+
+class Version {
+
+    Version mainVersion
+
+    int major = 0
+    int minor = 0
+    int patch = 0
+
+    Version(int major, int minor, int patch) {
+        this.major = major
+        this.minor = minor
+        this.patch = patch
+    }
+
+    Version(int major, int minor, int patch, Version mainVersion) {
+        this.major = major
+        this.minor = minor
+        this.patch = patch
+        this.mainVersion = mainVersion
+    }
+
+    Version(String version, Version mainVersion) {
+        def split = version.split('\\.')
+        this.major = Integer.parseInt(split[0])
+        this.minor = Integer.parseInt(split[1])
+        int patchEndIndex = split[2].indexOf('-')
+        if (patchEndIndex == -1) {
+            this.patch = Integer.parseInt(split[2])
+        } else {
+            this.patch = Integer.parseInt(split[2][0..patchEndIndex])
+        }
+
+        this.mainVersion = mainVersion
+    }
+
+    def bumpMajor() {
+        if (this.major > this.mainVersion.major) {
+            return
+        }
+
+        this.major += 1
+    }
+
+
+    def bumpMinor() {
+        if (this.minor > this.mainVersion.minor) {
+            return
+        }
+
+        this.minor += 1
+    }
+
+    def bumpPatch() {
+        if (this.patch > this.mainVersion.patch) {
+            return
+        }
+
+        this.patch += 1
+    }
+
+    @Override
+    public String toString() {
+        return "${major}.${minor}.${patch}"
+    }
+}

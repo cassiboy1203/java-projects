@@ -1,7 +1,7 @@
 package com.yukikase.staffmanager.core.commands;
 
-import com.yukikase.diframework.anotations.Component;
-import com.yukikase.diframework.anotations.Inject;
+import com.yukikase.framework.anotations.injection.Component;
+import com.yukikase.framework.anotations.injection.Inject;
 import com.yukikase.lib.interfaces.ICommand;
 import com.yukikase.lib.permission.Permission;
 import com.yukikase.staffmanager.core.PermissionRegister;

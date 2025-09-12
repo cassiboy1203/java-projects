@@ -22,10 +22,10 @@ on:
     outputs:
       version:
         description: new version of the project.
-        value: ${{ jobs.versioning.outputs.version }}
+        value: ${{ jobs.com.yukikase.versioning.outputs.version }}
       needs-release:
         description: is true when a new release needs to be build for this project.
-        value: ${{ jobs.versioning.outputs.release_needed }}
+        value: ${{ jobs.com.yukikase.versioning.outputs.release_needed }}
 
 jobs:
   determine_path:
@@ -41,7 +41,7 @@ jobs:
             echo "path=${{ inputs.path }}" >> $GITHUB_OUTPUT
           fi
 
-  versioning:
+  com.yukikase.versioning:
     runs-on: ubuntu-latest
     needs: determine_path
 
@@ -60,7 +60,7 @@ jobs:
         run: pip install -r scripts/semver_tool/requirements.txt
 
       - name: Determine version
-        id: versioning
+        id: com.yukikase.versioning
         run: |
           set +e
           if [ -z ${{ inputs.version_override }} ]; then
@@ -93,8 +93,8 @@ jobs:
           path: release_notes/${{ inputs.project }}.md
 
     outputs:
-      version: ${{ steps.versioning.outputs.version }}
-      release_needed: ${{ steps.versioning.outputs.release_needed }}
+      version: ${{ steps.com.yukikase.versioning.outputs.version }}
+      release_needed: ${{ steps.com.yukikase.versioning.outputs.release_needed }}
 
   update_maven_version:
     runs-on: ubuntu-latest
@@ -102,7 +102,7 @@ jobs:
       - name: Update maven version
         working-directory: ${{ inputs.project }}
         run: |
-          mvn versions:set -DnewVersion=${{ needs.versioning.outputs.version }}
+          mvn versions:set -DnewVersion=${{ needs.com.yukikase.versioning.outputs.version }}
           mvn versions:commit
 
       - name: Upload updated pom.xml

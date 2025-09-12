@@ -81,7 +81,11 @@ __pycache__
 node_modules
 .idea
 target
+build
+**/build
 
 **/**.iml
+.gradle
 
-**/**.jar
+
+server
