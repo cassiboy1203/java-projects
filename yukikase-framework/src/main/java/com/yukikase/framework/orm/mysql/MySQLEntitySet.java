@@ -6,16 +6,26 @@ import com.yukikase.framework.anotations.orm.Id;
 import com.yukikase.framework.exceptions.EntityCreationException;
 import com.yukikase.framework.exceptions.NoEntityFoundException;
 import com.yukikase.framework.orm.IDatabaseConnector;
+import com.yukikase.framework.orm.entity.EntityFactory;
 import com.yukikase.framework.orm.entity.EntitySet;
 import com.yukikase.framework.orm.entity.EntityTracker;
 import com.yukikase.framework.orm.query.Query;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class MySQLEntitySet<T> implements EntitySet<T> {
+
+    private static final Logger LOGGER = Logger.getLogger(MySQLEntitySet.class.getName());
+
+    public Query getWhereQuery() {
+        return whereQuery;
+    }
+
     private Query whereQuery;
     private final List<OrderClause> orderClauses = new ArrayList<>();
     private int limit = -1;
@@ -23,10 +33,10 @@ public class MySQLEntitySet<T> implements EntitySet<T> {
 
     private final IDatabaseConnector connector;
     private final EntityTracker tracker;
-
     private final Class<T> entityClass;
+    private final EntityFactory entityFactory;
 
-    public MySQLEntitySet(IDatabaseConnector connector, EntityTracker tracker, Class<T> entityClass) {
+    public MySQLEntitySet(IDatabaseConnector connector, EntityTracker tracker, Class<T> entityClass, EntityFactory entityFactory) {
         if (!entityClass.isAnnotationPresent(Entity.class)) {
             throw new IllegalArgumentException(entityClass.getName() + " is not an entity");
         }
@@ -34,6 +44,7 @@ public class MySQLEntitySet<T> implements EntitySet<T> {
         this.entityClass = entityClass;
         this.connector = connector;
         this.tracker = tracker;
+        this.entityFactory = entityFactory;
     }
 
     @Override
@@ -170,14 +181,42 @@ public class MySQLEntitySet<T> implements EntitySet<T> {
         var sj = new StringJoiner(", ");
         var changedFields = tracker.getChangedFields(entity);
         for (var field : entityClass.getDeclaredFields()) {
-            if (field.isAnnotationPresent(Id.class)) {
+            if (field.getType().isAnnotationPresent(Entity.class)) {
+                var methodName = field.getName();
+                Method method;
+                try {
+                    method = entityClass.getDeclaredMethod(methodName);
+                } catch (NoSuchMethodException e) {
+                    try {
+                        method = entityClass.getDeclaredMethod("get" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1));
+                    } catch (NoSuchMethodException ex) {
+                        LOGGER.severe("No getter found for field: " + field.getName() + "(Valid names: get[FieldName] or [fieldName]). Field can not be saved");
+                        continue;
+                    }
+                }
+
+                try {
+                    method.setAccessible(true);
+                    var foreignEntity = method.invoke(entity);
+
+                    if (foreignEntity != null) {
+                        var entrySet = entityFactory.get(foreignEntity.getClass());
+                        entrySet.update(foreignEntity, foreignEntity.getClass());
+                    }
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    method.setAccessible(false);
+                }
+            } else if (field.isAnnotationPresent(Id.class)) {
                 field.setAccessible(true);
                 try {
                     primaryKey = field.get(entity);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
+                } finally {
+                    field.setAccessible(false);
                 }
-                field.setAccessible(false);
                 continue;
             } else if (!changedFields.isEmpty() && !changedFields.contains(field.getName())) {
                 continue;
@@ -218,6 +257,14 @@ public class MySQLEntitySet<T> implements EntitySet<T> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public void update(Object entity, Class<?> entityClass) {
+        if (this.entityClass == entityClass) {
+            update((T) entity);
+        }
+    }
+
     @Override
     public void delete(Object primaryKey) {
         var sb = new StringBuilder();
@@ -253,6 +300,77 @@ public class MySQLEntitySet<T> implements EntitySet<T> {
         orderClauses.clear();
         limit = -1;
         offset = -1;
+    }
+
+    @Override
+    public void add(T entity) {
+        var tableName = getTableName();
+
+        var sjColumns = new StringJoiner(", ");
+        var sjValues = new StringJoiner(", ");
+        List<Object> values = new ArrayList<>();
+
+        for (var field : entityClass.getDeclaredFields()) {
+            var columnName = field.getName();
+            if (field.getType().isAnnotationPresent(Entity.class)) {
+                var methodName = field.getName();
+                Method method;
+                try {
+                    method = entityClass.getDeclaredMethod(methodName);
+                } catch (NoSuchMethodException e) {
+                    try {
+                        method = entityClass.getDeclaredMethod("get" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1));
+                    } catch (NoSuchMethodException ex) {
+                        LOGGER.severe("No getter found for field: " + field.getName() + "(Valid names: get[FieldName] or [fieldName]). Field can not be saved");
+                        continue;
+                    }
+                }
+
+                try {
+                    method.setAccessible(true);
+                    var foreignEntity = method.invoke(entity);
+                    method.setAccessible(false);
+
+                    if (foreignEntity != null) {
+                        var entrySet = entityFactory.get(foreignEntity.getClass());
+                        entrySet.update(foreignEntity, foreignEntity.getClass());
+                    }
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (field.isAnnotationPresent(Id.class)) {
+                columnName = field.getAnnotation(Id.class).name().isEmpty() ? columnName : field.getAnnotation(Id.class).name();
+            } else if (field.isAnnotationPresent(Column.class)) {
+                columnName = field.getAnnotation(Column.class).name().isEmpty() ? columnName : field.getAnnotation(Column.class).name();
+            }
+
+            field.setAccessible(true);
+            sjColumns.add(columnName);
+            sjValues.add("?");
+            try {
+                values.add(field.get(entity));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+            field.setAccessible(false);
+        }
+
+        var sqlString = "INSERT INTO " + tableName + " (" + sjColumns + ") VALUES (" + sjValues + ")";
+
+        try (var conn = connector.getConnection()) {
+            var stmt = conn.prepareStatement(sqlString);
+            for (int i = 1; i <= values.size(); i++) {
+                if (values.get(i - 1) instanceof Enum<?> value) {
+                    stmt.setObject(i - 1, value.name());
+                } else {
+                    stmt.setObject(i, values.get(i - 1));
+                }
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getWhere() {

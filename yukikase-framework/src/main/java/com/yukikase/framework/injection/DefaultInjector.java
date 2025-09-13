@@ -5,6 +5,8 @@ import com.yukikase.framework.anotations.injection.*;
 import com.yukikase.framework.exceptions.BeanInstantiationException;
 import com.yukikase.framework.exceptions.BeanNotFoundException;
 import com.yukikase.framework.exceptions.ClassNotABeanException;
+import com.yukikase.framework.orm.entity.EntityFactory;
+import com.yukikase.framework.orm.entity.EntitySet;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -139,7 +141,12 @@ public final class DefaultInjector implements Injector {
     public <T> T getInstance(Class<T> clazz, String name) {
         var dis = diMap.get(clazz);
         for (var extension : extensions) {
-            dis.addAll(extension.onBeforeGetInstance(clazz, name));
+            var extensionDis = extension.onBeforeGetInstance(clazz, name);
+            if (dis == null) {
+                dis = extensionDis;
+            } else {
+                dis.addAll(extensionDis);
+            }
         }
 
         Class<?> instanceClass;
@@ -201,7 +208,15 @@ public final class DefaultInjector implements Injector {
 
         for (var i = 0; i < parameters.length; i++) {
             var parameter = parameters[i];
-            if (parameter.isAnnotationPresent(Qualifier.class)) {
+            if (EntitySet.class.isAssignableFrom(parameter.getType())) {
+                var paramType = parameter.getParameterizedType();
+                if (paramType instanceof ParameterizedType pType) {
+                    Class<?> listElementClass = (Class<?>) pType.getActualTypeArguments()[0];
+
+                    var factory = getInstance(EntityFactory.class);
+                    args[i] = factory.get(listElementClass);
+                }
+            } else if (parameter.isAnnotationPresent(Qualifier.class)) {
                 var parameterName = parameter.getAnnotation(Qualifier.class).value();
                 args[i] = getInstance(parameter.getType(), parameterName);
             } else {
@@ -313,6 +328,14 @@ public final class DefaultInjector implements Injector {
                     Class<?> componentType = parameterRawType.getComponentType();
 
                     args[i] = getInstances(componentType);
+                } else if (EntitySet.class.isAssignableFrom(parameterRawType)) {
+                    var paramType = parameter.getParameterizedType();
+                    if (paramType instanceof ParameterizedType pType) {
+                        Class<?> listElementClass = (Class<?>) pType.getActualTypeArguments()[0];
+
+                        var factory = getInstance(EntityFactory.class);
+                        args[i] = factory.get(listElementClass);
+                    }
                 } else {
                     args[i] = getInstance(parameterRawType);
                 }

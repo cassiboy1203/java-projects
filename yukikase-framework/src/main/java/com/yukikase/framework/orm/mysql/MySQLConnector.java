@@ -1,13 +1,11 @@
 package com.yukikase.framework.orm.mysql;
 
-import com.yukikase.framework.anotations.injection.Component;
 import com.yukikase.framework.anotations.injection.Singleton;
 import com.yukikase.framework.orm.DatabaseConnector;
 
 import java.sql.SQLException;
 
 @Singleton
-@Component
 public class MySQLConnector extends DatabaseConnector {
 
     static {

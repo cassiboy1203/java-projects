@@ -14,14 +14,25 @@ import java.util.*;
 import java.util.logging.Logger;
 
 public abstract class AbstractTableGenerator implements ITableGenerator {
-    protected final IDatabaseConnector connector;
+    private final IDatabaseConnector connector;
     protected static final Logger LOGGER = Logger.getLogger(AbstractTableGenerator.class.getName());
+
+    protected final TableRelationNode rootTableRelationNode = new TableRelationNode();
 
     protected AbstractTableGenerator(IDatabaseConnector connector) {
         this.connector = connector;
     }
 
-    public final String updateTable(Class<?> clazz) {
+    @Override
+    public final String updateTables(Set<Class<?>> classes) {
+        for (Class<?> clazz : classes) {
+            updateTable(clazz);
+        }
+        return rootTableRelationNode.toSql();
+    }
+
+    @Override
+    public final void updateTable(Class<?> clazz) {
         if (!clazz.isAnnotationPresent(Entity.class)) {
             throw new RuntimeException("Class " + clazz.getName() + " is not an entity");
         }
@@ -59,7 +70,13 @@ public abstract class AbstractTableGenerator implements ITableGenerator {
 
 
         if (columnInfoMap.isEmpty()) {
-            return generateTable(clazz);
+            generateTable(clazz);
+            return;
+        }
+
+        var node = rootTableRelationNode.getNode(clazz);
+        if (node == null) {
+            node = new TableRelationNode(clazz);
         }
 
         var sj = new StringJoiner("\n\n");
@@ -70,7 +87,9 @@ public abstract class AbstractTableGenerator implements ITableGenerator {
             if (columnInfoMap.containsKey(columnName)) {
                 var columnInfo = columnInfoMap.remove(columnName);
 
-                if (!isSameType(columnInfo.type(), field.getType())) {
+                if (field.getType().isAnnotationPresent(Entity.class)) {
+                    // TODO: handle foreign key updates
+                } else if (!isSameType(columnInfo.type(), field.getType())) {
                     sj.add(alterColumnType(clazz, field));
                 } else if (hasVariableSize(field.getType())) {
                     var size = getSize(field);
@@ -79,15 +98,17 @@ public abstract class AbstractTableGenerator implements ITableGenerator {
                     }
                 }
 
-                if (columnInfo.nullable() != isNullable(field)) {
-                    sj.add(alterNullability(clazz, field));
+                if (columnInfo.nullable() == isNonNull(field)) {
+                    if (!field.getType().isAnnotationPresent(Entity.class)) {
+                        sj.add(alterNullability(clazz, field));
+                    }
                 }
 
                 if (columnInfo.primaryKey() != isPrimaryKey(field)) {
                     throw new EntityCreationException("Primary key from entity: " + tableName + ". Is different than in the database. Please manually update primary key.");
                 }
             } else {
-                sj.add(addNewColumn(clazz, field));
+                sj.add(addNewColumn(clazz, node, field));
             }
         }
         if (!columnInfoMap.isEmpty()) {
@@ -105,7 +126,11 @@ public abstract class AbstractTableGenerator implements ITableGenerator {
             LOGGER.warning(sb.toString());
         }
 
-        return sj.toString();
+        node.setSql(sj.toString());
+
+        if (!rootTableRelationNode.contains(clazz)) {
+            rootTableRelationNode.addDependentNode(node);
+        }
     }
 
     protected final int getSize(Field field) {
@@ -141,8 +166,8 @@ public abstract class AbstractTableGenerator implements ITableGenerator {
         return columnName;
     }
 
-    protected final boolean isNullable(Field field) {
-        return field.isAnnotationPresent(NonNull.class);
+    protected final boolean isNonNull(Field field) {
+        return field.isAnnotationPresent(NonNull.class) || field.isAnnotationPresent(Id.class);
     }
 
     protected final boolean isPrimaryKey(Field field) {
@@ -153,7 +178,7 @@ public abstract class AbstractTableGenerator implements ITableGenerator {
 
     protected abstract String alterColumnType(Class<?> entityClass, Field field);
 
-    protected abstract String addNewColumn(Class<?> entityClass, Field field);
+    protected abstract String addNewColumn(Class<?> entityClass, TableRelationNode node, Field field);
 
     protected abstract String alterNullability(Class<?> entityClass, Field field);
 

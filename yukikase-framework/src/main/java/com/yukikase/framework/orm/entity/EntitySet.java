@@ -27,11 +27,15 @@ public interface EntitySet<T> {
 
     void update(T entity);
 
+    void update(Object entity, Class<?> entityClass);
+
     void delete(T entity);
 
     void delete();
 
     void resetQuery();
+
+    void add(T entity);
 
     record OrderClause(String field, boolean descending) {
     }

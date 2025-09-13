@@ -10,7 +10,6 @@ import com.yukikase.framework.orm.ITableGenerator;
 import com.yukikase.framework.orm.OrmExtension;
 
 import java.sql.SQLException;
-import java.util.StringJoiner;
 
 public class YukikaseFramework {
 
@@ -39,18 +38,14 @@ public class YukikaseFramework {
         try {
             connector = IDatabaseConnector.create(type, host, port, database, user, password);
 
-            var sj = new StringJoiner("\n");
-
             var tableGenerator = ITableGenerator.getInstance(type, connector);
 
-            for (var entity : ormExtension.getEntities()) {
-                sj.add(tableGenerator.updateTable(entity));
-            }
-
-            if (sj.length() > 0) {
+            var sql = tableGenerator.updateTables(ormExtension.getEntities());
+            sql = sql.trim();
+            if (!sql.isEmpty()) {
                 try (var conn = connector.getConnection()) {
-                    System.out.println(sj);
-                    conn.prepareStatement(sj.toString()).execute();
+                    System.out.println(sql);
+                    conn.prepareStatement(sql).execute();
                 }
             }
 

@@ -15,4 +15,6 @@ public interface IPickaxes {
     boolean isPickaxe(Player player, ItemStack item);
 
     ItemStack item(Player player);
+
+    boolean hasPickaxe(Player player);
 }

@@ -15,6 +15,16 @@ public class PickaxeEntity {
     @Column(length = 10)
     PickaxeMaterial material;
 
+    public PickaxeEntity() {
+    }
+
+    public PickaxeEntity(UUID owner, int level, long experience, PickaxeMaterial material) {
+        this.owner = owner;
+        this.level = level;
+        this.experience = experience;
+        this.material = material;
+    }
+
     public UUID owner() {
         return owner;
     }

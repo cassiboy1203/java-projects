@@ -6,7 +6,7 @@ import org.bukkit.Material;
 
 @Entity
 public class PickaxeMaterial {
-    @Id
+    @Id(length = 10)
     private String name;
     private int maxLevel;
     private int baseDamage;

@@ -1,9 +1,9 @@
 boolean isCi = System.getenv("CI")
-if (!isCi){
+if (!isCi) {
     version = file("version.info").text.trim() + "-SNAPSHOT"
 } else {
     def buildNumber = System.getenv("GITHUB_RUN_NUMBER")
-    switch (System.getenv("env")){
+    switch (System.getenv("env")) {
         case "master":
             version = file("version.info").text.trim()
             break
@@ -15,18 +15,18 @@ if (!isCi){
     }
 }
 
-tasks.register("versioning"){
-    String projectName = project.name
+tasks.register("versioning") {
+    String projectName = project.path.replace(":", ".")
     doLast {
-        def getScope = {String message ->
+        def getScope = { String message ->
             def types = [
-                    "fix" ,
-                    "feat" ,
-                    "build" ,
-                    "ci" ,
-                    "docs" ,
-                    "perf" ,
-                    "refactor" ,
+                    "fix",
+                    "feat",
+                    "build",
+                    "ci",
+                    "docs",
+                    "perf",
+                    "refactor",
                     "test"
             ]
 
@@ -39,7 +39,7 @@ tasks.register("versioning"){
             return null
         }
 
-        def determineBump = {String msg ->
+        def determineBump = { String msg ->
             if (msg.contains("BREAKING CHANGE")) {
                 return "major"
             } else if (msg.startsWith("feat")) {
@@ -49,7 +49,7 @@ tasks.register("versioning"){
             }
         }
 
-        def getVersion = {Version currentVersion, commits, scope ->
+        def getVersion = { Version currentVersion, commits, scope ->
             int major = 0
             int minor = 0
             int patch = 0
@@ -61,7 +61,7 @@ tasks.register("versioning"){
                     scopes = messageScope.split(',')
                 }
 
-                if (scopes.length > 1 && !scopes.contains(scope)) {
+                if (scopes.length > 1 && !scopes.contains(scope) && !scopes.contains("*")) {
                     return
                 }
 
@@ -90,7 +90,7 @@ tasks.register("versioning"){
             return currentVersion
         }
 
-        def lastTag = {String project ->
+        def lastTag = { String project ->
             def cmd = ["git", "tag", "--list", "${project}_*", "--sort=-v:refname"]
             def proc = cmd.execute()
             proc.waitFor()
@@ -98,7 +98,7 @@ tasks.register("versioning"){
             return tags ? tags.get(0) : null
         }
 
-        def lastTagWithCommit = {String project, String commit ->
+        def lastTagWithCommit = { String project, String commit ->
             def cmd = ["git", "tag", "--list", "${project}_*", "--sort=-v:refname", "${commit}"]
             def proc = cmd.execute()
             proc.waitFor()
@@ -106,7 +106,7 @@ tasks.register("versioning"){
             return tags ? tags.get(0) : null
         }
 
-        def commits = {tag ->
+        def commits = { tag ->
             if (tag == null) {
                 return "git log --pretty=%s".execute().text.readLines()
             } else {

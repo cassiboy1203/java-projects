@@ -2,8 +2,11 @@ package com.yukikase.rpg.prison.pickaxe;
 
 import com.yukikase.framework.anotations.injection.Inject;
 import com.yukikase.framework.anotations.injection.Singleton;
+import com.yukikase.framework.exceptions.NoEntityFoundException;
 import com.yukikase.framework.orm.entity.EntitySet;
+import com.yukikase.framework.orm.query.QueryBuilder;
 import com.yukikase.rpg.prison.pickaxe.entity.PickaxeEntity;
+import com.yukikase.rpg.prison.pickaxe.entity.PickaxeMaterial;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
@@ -18,21 +21,37 @@ import java.util.UUID;
 @com.yukikase.framework.anotations.injection.Component
 public class Pickaxes implements IPickaxes {
     private final EntitySet<PickaxeEntity> pickaxes;
+    private final PickaxeMaterial baseMaterial;
     private final Map<UUID, PickaxeEntity> pickaxeCache;
 
     @Inject
-    public Pickaxes(EntitySet<PickaxeEntity> pickaxes) {
-        this.pickaxes = pickaxes;
+    public Pickaxes(EntitySet<PickaxeEntity> pickaxes, EntitySet<PickaxeMaterial> material) {
+        material.where(QueryBuilder.equals("isDefault", true));
+        this.baseMaterial = material.next();
+
         this.pickaxeCache = new HashMap<>();
+        this.pickaxes = pickaxes;
     }
 
-    private PickaxeEntity getPickaxe(UUID uuid) {
-        PickaxeEntity pickaxe = pickaxeCache.get(uuid);
+    private PickaxeEntity getPickaxe(UUID owner) {
+        PickaxeEntity pickaxe = pickaxeCache.get(owner);
         if (pickaxe == null) {
-            pickaxe = pickaxes.get(uuid);
-            pickaxeCache.put(uuid, pickaxe);
+            try {
+                pickaxe = pickaxes.get(owner);
+            } catch (NoEntityFoundException ignored) {
+            }
+            if (pickaxe == null) {
+                pickaxe = createPickaxe(owner);
+            }
+            pickaxeCache.put(owner, pickaxe);
         }
 
+        return pickaxe;
+    }
+
+    private PickaxeEntity createPickaxe(UUID owner) {
+        var pickaxe = new PickaxeEntity(owner, 1, 0, baseMaterial);
+        pickaxes.add(pickaxe);
         return pickaxe;
     }
 
@@ -120,5 +139,16 @@ public class Pickaxes implements IPickaxes {
         item.setItemMeta(meta);
 
         return item;
+    }
+
+    @Override
+    public boolean hasPickaxe(Player player) {
+        var inventory = player.getInventory();
+        for (var item : inventory.getContents()) {
+            if (item != null && isPickaxe(player, item)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

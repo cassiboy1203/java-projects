@@ -18,7 +18,7 @@ public abstract class DatabaseConnector implements IDatabaseConnector {
     protected static int MAX_POOL_SIZE = 0;
 
     protected DatabaseConnector(String driver, String host, String port, String database, String user, String password) throws SQLException {
-        this.connectionString = "jdbc:" + driver + "://" + host + ":" + port + "/" + database;
+        this.connectionString = "jdbc:" + driver + "://" + host + ":" + port + "/" + database + "?allowMultiQueries=true";
         this.username = user;
         this.password = password;
 

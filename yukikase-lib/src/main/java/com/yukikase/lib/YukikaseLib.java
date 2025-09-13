@@ -3,8 +3,9 @@ package com.yukikase.lib;
 import com.yukikase.framework.YukikaseFramework;
 import com.yukikase.framework.anotations.injection.Singleton;
 import com.yukikase.framework.injection.Injector;
-import com.yukikase.framework.orm.DatabaseConnector;
 import com.yukikase.framework.orm.DatabaseType;
+import com.yukikase.framework.orm.IDatabaseConnector;
+import com.yukikase.framework.orm.entity.EntityFactory;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @Singleton
@@ -20,18 +21,21 @@ public class YukikaseLib extends JavaPlugin {
     public Injector registerPlugin(YukikasePlugin plugin) {
         Injector injector;
         if (plugin.databaseEnabled()) {
-            injector = YukikaseFramework.start(true, plugin.getClass(), YukikaseLib.class);
+            injector = YukikaseFramework.start(true, plugin.getClass(), YukikaseLib.class, YukikaseFramework.class);
         } else {
             injector = YukikaseFramework.start(plugin.getClass(), YukikaseLib.class);
         }
         injector.registerSingleton(YukikasePlugin.class, plugin);
         injector.registerSingleton(JavaPlugin.class, plugin);
-        injector.runConfigurations();
+        injector.registerSingleton(YukikaseLib.class, this);
         if (plugin.databaseEnabled()) {
             var info = getConnectionInfo();
             var databaseConnector = YukikaseFramework.startDatabase(info.type(), info.host(), info.port(), plugin.getName(), info.user(), info.password());
-            injector.registerSingleton(DatabaseConnector.class, databaseConnector);
+            injector.registerSingleton(IDatabaseConnector.class, databaseConnector);
+            var entityFactory = EntityFactory.getInstance(info.type(), injector);
+            injector.registerSingleton(EntityFactory.class, entityFactory);
         }
+        injector.runConfigurations();
         return injector;
     }
 

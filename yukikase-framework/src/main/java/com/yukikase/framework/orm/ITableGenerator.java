@@ -2,6 +2,8 @@ package com.yukikase.framework.orm;
 
 import com.yukikase.framework.orm.mysql.MySQLTableGenerator;
 
+import java.util.Set;
+
 public interface ITableGenerator {
 
     static ITableGenerator getInstance(DatabaseType type, IDatabaseConnector connector) {
@@ -10,9 +12,11 @@ public interface ITableGenerator {
         };
     }
 
-    String updateTable(Class<?> clazz);
+    String updateTables(Set<Class<?>> classes);
 
-    String generateTable(Class<?> clazz);
+    void updateTable(Class<?> clazz);
+
+    void generateTable(Class<?> clazz);
 
     String fromJavaType(Class<?> fieldType);
 

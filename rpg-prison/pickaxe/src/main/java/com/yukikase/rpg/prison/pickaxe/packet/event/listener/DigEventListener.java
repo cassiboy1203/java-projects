@@ -1,4 +1,4 @@
-package com.yukikase.rpg.prison.pickaxe.packets.events.listeners;
+package com.yukikase.rpg.prison.pickaxe.packet.event.listener;
 
 import com.yukikase.framework.anotations.injection.Component;
 import com.yukikase.lib.annotations.packet.PacketListener;
@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 public class DigEventListener implements IPacketListener {
     @PacketListener
     public void onDigAction(DigActionEvent event) {
-        switch (event.action()){
+        switch (event.action()) {
             case START -> {
                 startMining(event.player(), event.location());
             }
@@ -21,11 +21,11 @@ public class DigEventListener implements IPacketListener {
         }
     }
 
-    private void startMining(Player player, Location location){
+    private void startMining(Player player, Location location) {
 
     }
 
-    private void cancelMining(Player player, Location location){
+    private void cancelMining(Player player, Location location) {
 
     }
 }

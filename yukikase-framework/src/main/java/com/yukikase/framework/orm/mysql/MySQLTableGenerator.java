@@ -7,12 +7,11 @@ import com.yukikase.framework.anotations.orm.Entity;
 import com.yukikase.framework.anotations.orm.Id;
 import com.yukikase.framework.orm.AbstractTableGenerator;
 import com.yukikase.framework.orm.IDatabaseConnector;
+import com.yukikase.framework.orm.TableRelationNode;
 
 import java.lang.reflect.Field;
 import java.sql.Types;
-import java.util.Date;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class MySQLTableGenerator extends AbstractTableGenerator {
@@ -44,16 +43,42 @@ public class MySQLTableGenerator extends AbstractTableGenerator {
     }
 
     @Override
-    protected String addNewColumn(Class<?> entityClass, Field field) {
+    protected String addNewColumn(Class<?> entityClass, TableRelationNode node, Field field) {
         var sb = new StringBuilder();
         var tableName = tableName(entityClass);
         var columnName = columnName(field);
-        var type = fromJavaType(field.getType(), getSize(field));
-        sb.append("ALTER TABLE ").append(tableName).append(" ADD COLUMN ").append(columnName).append(" ").append(type);
-        if (isNullable(field)) {
-            sb.append("\n").append("UPDATE ").append(tableName).append(" SET ").append(columnName).append(" = ").append(defaultValue(field.getType()));
-            sb.append("ALTER TABLE ").append(tableName).append(" MODIFY COLUMN").append(columnName).append(" ").append(type).append(" NOT NULL");
+        String type = null;
+        List<String> foreignKeys = new ArrayList<>();
+        if (field.getType().isAnnotationPresent(Entity.class)) {
+            for (var dependantField : field.getType().getDeclaredFields()) {
+                if (dependantField.isAnnotationPresent(Id.class)) {
+                    var foreignFieldName = columnName(dependantField);
+                    type = fromJavaType(dependantField.getType(), getSize(dependantField));
+
+                    foreignKeys.add("ALTER TABLE " + tableName + " ADD CONSTRAINT fk_" + tableName + "_" + columnName + " FOREIGN KEY (" + columnName + ") REFERENCES " + tableName(field.getType()) + "(" + foreignFieldName + ")");
+                    break;
+                }
+            }
+            if (type == null) {
+                throw new IllegalArgumentException("Entity " + field.getType().getName() + " does not have a primary key");
+            }
+
+            var dependantNode = rootTableRelationNode.getNode(field.getType());
+            if (dependantNode == null) {
+                dependantNode = new TableRelationNode(field.getType());
+                rootTableRelationNode.addDependentNode(dependantNode);
+            }
+            dependantNode.addDependentNode(node);
+        } else {
+            type = fromJavaType(field.getType(), getSize(field));
         }
+        sb.append("ALTER TABLE ").append(tableName).append(" ADD COLUMN ").append(columnName).append(" ").append(type);
+        if (isNonNull(field)) {
+            sb.append("\n").append("UPDATE ").append(tableName).append(" SET ").append(columnName).append(" = ").append(defaultValue(field.getType()));
+            sb.append("ALTER TABLE ").append(tableName).append(" MODIFY COLUMN ").append(columnName).append(" ").append(type).append(" NOT NULL");
+        }
+
+        sb.append("\n").append(foreignKeys);
 
         return sb.toString();
     }
@@ -64,11 +89,11 @@ public class MySQLTableGenerator extends AbstractTableGenerator {
         var tableName = tableName(entityClass);
         var columnName = columnName(field);
         var type = fromJavaType(field.getType(), getSize(field));
-        if (isNullable(field)) {
+        if (isNonNull(field)) {
             sb.append("\n").append("UPDATE ").append(tableName).append(" SET ").append(columnName).append(" = ").append(defaultValue(field.getType()));
-            sb.append("ALTER TABLE ").append(tableName).append(" MODIFY COLUMN").append(columnName).append(" ").append(type).append(" NOT NULL");
+            sb.append("ALTER TABLE ").append(tableName).append(" MODIFY COLUMN ").append(columnName).append(" ").append(type).append(" NOT NULL");
         } else {
-            sb.append("ALTER TABLE ").append(tableName).append(" MODIFY COLUMN").append(columnName).append(" ").append(type);
+            sb.append("ALTER TABLE ").append(tableName).append(" MODIFY COLUMN ").append(columnName).append(" ").append(type);
         }
 
         return sb.toString();
@@ -100,9 +125,14 @@ public class MySQLTableGenerator extends AbstractTableGenerator {
 
 
     @Override
-    public String generateTable(Class<?> clazz) {
+    public void generateTable(Class<?> clazz) {
         if (!clazz.isAnnotationPresent(Entity.class)) {
             throw new IllegalArgumentException("Class " + clazz.getName() + " is not an entity");
+        }
+
+        var node = rootTableRelationNode.getNode(clazz);
+        if (node == null) {
+            node = new TableRelationNode(clazz);
         }
 
         var tableName = tableName(clazz);
@@ -113,9 +143,33 @@ public class MySQLTableGenerator extends AbstractTableGenerator {
         var fields = clazz.getDeclaredFields();
 
         var sj = new StringJoiner(",\n");
+        List<String> foreignKeys = new ArrayList<>();
         for (var field : fields) {
             var columnName = columnName(field);
-            var sqlType = fieldSqlType(field);
+            String sqlType = null;
+            if (field.getType().isAnnotationPresent(Entity.class)) {
+                for (var dependantField : field.getType().getDeclaredFields()) {
+                    if (dependantField.isAnnotationPresent(Id.class)) {
+                        var foreignFieldName = columnName(dependantField);
+                        sqlType = fromJavaType(dependantField.getType(), getSize(dependantField));
+
+                        foreignKeys.add("FOREIGN KEY (" + columnName + ") references " + tableName(field.getType()) + "(" + foreignFieldName + ")");
+                        break;
+                    }
+                }
+                if (sqlType == null) {
+                    throw new IllegalArgumentException("Entity " + field.getType().getName() + " does not have a primary key");
+                }
+
+                var dependantNode = rootTableRelationNode.getNode(field.getType());
+                if (dependantNode == null) {
+                    dependantNode = new TableRelationNode(field.getType());
+                    rootTableRelationNode.addDependentNode(dependantNode);
+                }
+                dependantNode.addDependentNode(node);
+            } else {
+                sqlType = fromJavaType(field.getType(), getSize(field));
+            }
 
             var sb2 = new StringBuilder();
 
@@ -131,11 +185,18 @@ public class MySQLTableGenerator extends AbstractTableGenerator {
 
             sj.add(sb2.toString());
         }
+        for (var foreignKey : foreignKeys) {
+            sj.add("\t" + foreignKey);
+        }
 
         sb.append(sj);
-        sb.append("\n)");
+        sb.append("\n);");
 
-        return sb.toString();
+        node.setSql(sb.toString());
+
+        if (!rootTableRelationNode.contains(clazz)) {
+            rootTableRelationNode.addDependentNode(node);
+        }
     }
 
     @Override
