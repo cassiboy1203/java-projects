@@ -16,4 +16,7 @@ public abstract class Task {
     public final void cancel() {
         this.isCancelled = true;
     }
+
+    public void onCancel() {
+    }
 }

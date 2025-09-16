@@ -1,39 +1,24 @@
 package com.yukikase.framework.orm.entity;
 
-import com.yukikase.framework.orm.query.Query;
+import com.j256.ormlite.stmt.PreparedQuery;
+import com.j256.ormlite.stmt.QueryBuilder;
 
-import java.util.Set;
+import java.util.List;
 
 public interface EntitySet<T> {
-    EntitySet<T> where(Query query);
+    QueryBuilder<T, Object> queryBuilder();
 
-    EntitySet<T> orderBy(String field);
-
-    EntitySet<T> orderBy(String field, boolean descending);
-
-    EntitySet<T> limit(int limit);
-
-    EntitySet<T> offset(int offset);
+    List<T> query(PreparedQuery<T> preparedQuery);
 
     T get(Object primaryKey);
 
-    Set<T> getAll();
+    List<T> getAll();
 
-    Set<T> getAllNext();
-
-    T next();
-
-    int count();
+    long count();
 
     void update(T entity);
 
-    void update(Object entity, Class<?> entityClass);
-
     void delete(T entity);
-
-    void delete();
-
-    void resetQuery();
 
     void add(T entity);
 

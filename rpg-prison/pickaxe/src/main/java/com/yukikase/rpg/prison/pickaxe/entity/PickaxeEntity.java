@@ -1,18 +1,19 @@
 package com.yukikase.rpg.prison.pickaxe.entity;
 
-import com.yukikase.framework.anotations.orm.Column;
-import com.yukikase.framework.anotations.orm.Entity;
-import com.yukikase.framework.anotations.orm.Id;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.UUID;
 
-@Entity("Pickaxe")
+@DatabaseTable(tableName = "pickaxe")
 public class PickaxeEntity {
-    @Id
+    @DatabaseField(id = true)
     UUID owner;
+    @DatabaseField
     int level;
+    @DatabaseField
     long experience;
-    @Column(length = 10)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
     PickaxeMaterial material;
 
     public PickaxeEntity() {
@@ -25,31 +26,35 @@ public class PickaxeEntity {
         this.material = material;
     }
 
-    public UUID owner() {
+    public UUID getOwner() {
         return owner;
     }
 
-    public int level() {
+    public void setOwner(UUID owner) {
+        this.owner = owner;
+    }
+
+    public int getLevel() {
         return level;
     }
 
-    public long experience() {
-        return experience;
-    }
-
-    public PickaxeMaterial material() {
-        return material;
-    }
-
-    public void level(int level) {
+    public void setLevel(int level) {
         this.level = level;
     }
 
-    public void experience(long experience) {
+    public long getExperience() {
+        return experience;
+    }
+
+    public void setExperience(long experience) {
         this.experience = experience;
     }
 
-    public void material(PickaxeMaterial material) {
+    public PickaxeMaterial getMaterial() {
+        return material;
+    }
+
+    public void setMaterial(PickaxeMaterial material) {
         this.material = material;
     }
 }

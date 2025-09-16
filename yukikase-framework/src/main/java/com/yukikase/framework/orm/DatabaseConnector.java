@@ -1,66 +1,44 @@
 package com.yukikase.framework.orm;
 
-import com.yukikase.framework.orm.proxy.ConnectionProxy;
+import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import com.yukikase.framework.anotations.injection.Component;
+import com.yukikase.framework.anotations.injection.Inject;
+import com.yukikase.framework.anotations.injection.Singleton;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
-public abstract class DatabaseConnector implements IDatabaseConnector {
-    protected final String connectionString;
-    private final String username;
-    private final String password;
+@Component
+@Singleton
+public class DatabaseConnector implements IDatabaseConnector {
 
-    private final BlockingQueue<Connection> pool;
+    private final DatabaseInfo databaseInfo;
 
-    protected static int MAX_POOL_SIZE = 0;
+    private JdbcPooledConnectionSource connectionSource;
 
-    protected DatabaseConnector(String driver, String host, String port, String database, String user, String password) throws SQLException {
-        this.connectionString = "jdbc:" + driver + "://" + host + ":" + port + "/" + database + "?allowMultiQueries=true";
-        this.username = user;
-        this.password = password;
-
-        pool = new LinkedBlockingQueue<>(MAX_POOL_SIZE);
-
-        var startupConnectionString = "jdbc:" + driver + "://" + host + ":" + port + "/";
-        try (var conn = DriverManager.getConnection(startupConnectionString, username, password)) {
-            var statement = conn.prepareStatement("CREATE DATABASE IF NOT EXISTS `" + database + "`;");
-            statement.execute();
-        }
-
-        for (int i = 0; i < MAX_POOL_SIZE; i++) {
-            var conn = createConnection();
-            pool.offer(conn);
-        }
-    }
-
-    private Connection createConnection() throws SQLException {
-        return DriverManager.getConnection(connectionString, username, password);
+    @Inject
+    public DatabaseConnector(DatabaseInfo databaseInfo) {
+        this.databaseInfo = databaseInfo;
     }
 
     @Override
-    public final Connection getConnection() throws SQLException {
-        var conn = pool.poll();
-        if (conn == null || conn.isClosed() || !conn.isValid(2)) {
-            conn = createConnection();
+    public final JdbcPooledConnectionSource getConnection() throws SQLException {
+        if (connectionSource == null) {
+            var baseConnectionString = "jdbc:" + databaseInfo.getDatabaseType() + "://" + databaseInfo.getHost() + ":" + databaseInfo.getPort() + "/";
+            try (var conn = DriverManager.getConnection(baseConnectionString, databaseInfo.getUser(), databaseInfo.getPassword());) {
+                var stmt = conn.prepareStatement("CREATE DATABASE IF NOT EXISTS `" + databaseInfo.getDatabaseType() + "`");
+                stmt.executeUpdate();
+            }
+            connectionSource = new JdbcPooledConnectionSource(baseConnectionString + databaseInfo.getDatabase(), databaseInfo.getUser(), databaseInfo.getPassword());
+            connectionSource.setMaxConnectionsFree(databaseInfo.getPoolSize());
         }
-        return ConnectionProxy.wrap(conn, this);
-    }
 
-
-    public final void returnConnection(Connection conn) throws SQLException {
-        if (conn != null && !conn.isClosed() && pool.size() < MAX_POOL_SIZE) {
-            pool.offer(conn);
-        }
+        return connectionSource;
     }
 
     @Override
-    public final void shutdown() throws SQLException {
-        for (var connection : pool) {
-            connection.close();
-        }
+    public final void shutdown() throws Exception {
+        connectionSource.close();
     }
 
 }

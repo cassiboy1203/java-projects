@@ -17,4 +17,10 @@ public interface IPickaxes {
     ItemStack item(Player player);
 
     boolean hasPickaxe(Player player);
+
+    void addLevel(Player player, int level);
+
+    void upgrade(Player player);
+
+    ItemStack getPickaxeInInventory(Player player);
 }

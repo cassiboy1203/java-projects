@@ -1,24 +1,23 @@
 package com.yukikase.framework.orm;
 
 
-import com.yukikase.framework.anotations.orm.Entity;
+import com.j256.ormlite.table.DatabaseTable;
 import com.yukikase.framework.injection.InjectorExtension;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrmExtension implements InjectorExtension {
-
-    private final Set<Class<?>> entities = new HashSet<>();
+    private final List<Class<?>> entities = new ArrayList<>();
 
     @Override
     public void onScan(Class<?> clazz) {
-        if (clazz.isAnnotationPresent(Entity.class)) {
+        if (clazz.isAnnotationPresent(DatabaseTable.class)) {
             entities.add(clazz);
         }
     }
 
-    public Set<Class<?>> getEntities() {
+    public List<Class<?>> getEntities() {
         return entities;
     }
 }

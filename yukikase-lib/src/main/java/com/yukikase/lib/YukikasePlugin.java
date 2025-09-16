@@ -17,6 +17,7 @@ import java.util.logging.Level;
 public abstract class YukikasePlugin extends JavaPlugin {
     protected Injector injector;
     private final Map<Timer, BukkitTask> runningTimers = new HashMap<>();
+    private final Map<Task, BukkitTask> runningTasks = new HashMap<>();
 
     public final void useClassLoader() {
         Thread.currentThread().setContextClassLoader(getClassLoader());
@@ -31,6 +32,10 @@ public abstract class YukikasePlugin extends JavaPlugin {
         doDisable();
         for (var timer : runningTimers.values()) {
             timer.cancel();
+        }
+        for (var task : runningTasks.entrySet()) {
+            task.getKey().onCancel();
+            task.getValue().cancel();
         }
     }
 
@@ -89,30 +94,38 @@ public abstract class YukikasePlugin extends JavaPlugin {
                 }
             }
         }.runTaskTimerAsynchronously(this, timer.getDelay(), timer.getInterval());
+
+        runningTimers.put(timer, runnable);
     }
 
     public final void startTask(Task task) {
-        new BukkitRunnable() {
+        var runnable = new BukkitRunnable() {
             @Override
             public void run() {
                 task.run();
                 if (task.isCancelled()) {
+                    task.onCancel();
                     cancel();
                 }
             }
         }.runTaskLater(this, task.getDelay());
+
+        runningTasks.put(task, runnable);
     }
 
     public final void startTaskAsync(Task task) {
-        new BukkitRunnable() {
+        var runnable = new BukkitRunnable() {
             @Override
             public void run() {
                 task.run();
                 if (task.isCancelled()) {
+                    task.onCancel();
                     cancel();
                 }
             }
         }.runTaskLaterAsynchronously(this, task.getDelay());
+
+        runningTasks.put(task, runnable);
     }
 
     public final <T> T getInstance(Class<T> clazz) {

@@ -7,8 +7,8 @@ on:
     paths:
       - di-framework/**
       - staffmanager-core/**
-      - yukikase-lib/**
-      - .github/workflows/**
+      - ../../../yukikase-lib
+      - ..
 
 jobs:
   determine_versions:

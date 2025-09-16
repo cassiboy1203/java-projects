@@ -1,12 +1,10 @@
 package com.yukikase.framework;
 
 
-import com.yukikase.framework.exceptions.DatabaseStartupException;
+import com.j256.ormlite.table.TableUtils;
 import com.yukikase.framework.injection.DefaultInjector;
 import com.yukikase.framework.injection.Injector;
-import com.yukikase.framework.orm.DatabaseType;
 import com.yukikase.framework.orm.IDatabaseConnector;
-import com.yukikase.framework.orm.ITableGenerator;
 import com.yukikase.framework.orm.OrmExtension;
 
 import java.sql.SQLException;
@@ -30,29 +28,12 @@ public class YukikaseFramework {
         return injector;
     }
 
-    public static IDatabaseConnector startDatabase(DatabaseType type, String host, String port, String database, String user, String password) {
-        if (ormExtension == null) {
-            return null;
-        }
-        IDatabaseConnector connector = null;
-        try {
-            connector = IDatabaseConnector.create(type, host, port, database, user, password);
-
-            var tableGenerator = ITableGenerator.getInstance(type, connector);
-
-            var sql = tableGenerator.updateTables(ormExtension.getEntities());
-            sql = sql.trim();
-            if (!sql.isEmpty()) {
-                try (var conn = connector.getConnection()) {
-                    System.out.println(sql);
-                    conn.prepareStatement(sql).execute();
-                }
+    public static void startDatabase(Injector injector) throws SQLException {
+        if (ormExtension != null) {
+            var conn = injector.getInstance(IDatabaseConnector.class).getConnection();
+            for (var entity : ormExtension.getEntities()) {
+                TableUtils.createTableIfNotExists(conn, entity);
             }
-
-        } catch (SQLException e) {
-            throw new DatabaseStartupException(e);
         }
-
-        return connector;
     }
 }

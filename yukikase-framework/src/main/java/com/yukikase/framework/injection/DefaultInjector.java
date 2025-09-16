@@ -5,14 +5,17 @@ import com.yukikase.framework.anotations.injection.*;
 import com.yukikase.framework.exceptions.BeanInstantiationException;
 import com.yukikase.framework.exceptions.BeanNotFoundException;
 import com.yukikase.framework.exceptions.ClassNotABeanException;
-import com.yukikase.framework.orm.entity.EntityFactory;
+import com.yukikase.framework.orm.IDatabaseConnector;
 import com.yukikase.framework.orm.entity.EntitySet;
+import com.yukikase.framework.orm.entity.OrmLiteEntitySet;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.zip.ZipInputStream;
+
+import static com.yukikase.framework.TypeUtil.convertValue;
 
 public final class DefaultInjector implements Injector {
 
@@ -213,8 +216,7 @@ public final class DefaultInjector implements Injector {
                 if (paramType instanceof ParameterizedType pType) {
                     Class<?> listElementClass = (Class<?>) pType.getActualTypeArguments()[0];
 
-                    var factory = getInstance(EntityFactory.class);
-                    args[i] = factory.get(listElementClass);
+                    args[i] = new OrmLiteEntitySet<>(listElementClass, getInstance(IDatabaseConnector.class));
                 }
             } else if (parameter.isAnnotationPresent(Qualifier.class)) {
                 var parameterName = parameter.getAnnotation(Qualifier.class).value();
@@ -235,9 +237,14 @@ public final class DefaultInjector implements Injector {
                         value = System.getenv(valueKey);
                     }
 
-                    field.setAccessible(true);
-                    field.set(instance, value);
-                    field.setAccessible(false);
+                    if (value != null) {
+                        field.setAccessible(true);
+                        try {
+                            field.set(instance, convertValue(value, field.getType()));
+                        } finally {
+                            field.setAccessible(false);
+                        }
+                    }
                 }
             }
 
@@ -333,8 +340,7 @@ public final class DefaultInjector implements Injector {
                     if (paramType instanceof ParameterizedType pType) {
                         Class<?> listElementClass = (Class<?>) pType.getActualTypeArguments()[0];
 
-                        var factory = getInstance(EntityFactory.class);
-                        args[i] = factory.get(listElementClass);
+                        args[i] = new OrmLiteEntitySet<>(listElementClass, getInstance(IDatabaseConnector.class));
                     }
                 } else {
                     args[i] = getInstance(parameterRawType);

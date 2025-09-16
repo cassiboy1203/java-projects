@@ -7,6 +7,14 @@ services:
     ports:
       - "25565:25565"
       - "5005:5005"
+    environment:
+      database.pool.size: 5
+      database.type: mysql
+      database.host: database
+      database.port: 3306
+      database.user: root
+      database.password: root
+      database.database: rpg_prison
     stdin_open: true
     tty: true
 
