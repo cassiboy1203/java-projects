@@ -1,7 +1,7 @@
 package com.yukikase.lib.command;
 
-import com.yukikase.diframework.anotations.Configuration;
-import com.yukikase.diframework.anotations.Register;
+import com.yukikase.framework.anotations.injection.Configuration;
+import com.yukikase.framework.anotations.injection.Register;
 import com.yukikase.lib.YukikasePlugin;
 import com.yukikase.lib.interfaces.ICommand;
 import com.yukikase.lib.permission.IPermissionHandler;
@@ -26,6 +26,7 @@ public class CommandRegister {
 
                 var map = (CommandMap) f.get(Bukkit.getServer());
                 map.register(executor.getName(), executor);
+                f.setAccessible(false);
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }

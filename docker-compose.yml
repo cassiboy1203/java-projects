@@ -3,12 +3,32 @@ services:
     build:
       dockerfile: server/Dockerfile
     volumes:
-      - server:/server
+      - ./server:/server
     ports:
       - "25565:25565"
       - "5005:5005"
+    environment:
+      database.pool.size: 5
+      database.type: mysql
+      database.host: database
+      database.port: 3306
+      database.user: root
+      database.password: root
+      database.database: rpg_prison
     stdin_open: true
     tty: true
 
+  database:
+    image:
+      mariadb:latest
+    volumes:
+      - database:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+
 volumes:
-  server:
+  database:

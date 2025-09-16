@@ -1,7 +1,7 @@
 package com.yukikase.lib.permission;
 
-import com.yukikase.diframework.anotations.Component;
-import com.yukikase.diframework.anotations.Inject;
+import com.yukikase.framework.anotations.injection.Component;
+import com.yukikase.framework.anotations.injection.Inject;
 import com.yukikase.lib.YukikasePlugin;
 import com.yukikase.lib.exceptions.NoPermissionFoundException;
 import com.yukikase.lib.exceptions.NoPermissionRegisterFound;
