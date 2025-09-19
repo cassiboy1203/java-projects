@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class StaffModeTest {
@@ -29,13 +28,13 @@ class StaffModeTest {
     void testToggleStaffModeEnter() {
         //arrange
         when(sut.isInStaffMode(player)).thenReturn(false);
-        when(sut.enterStaffMode(player)).thenReturn(true);
+        when(sut.enterStaffMode(player)).thenReturn(1);
 
         //act
         var actual = sut.toggleStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         verify(sut).enterStaffMode(player);
     }
 
@@ -43,13 +42,13 @@ class StaffModeTest {
     void testToggleStaffModeLeave() {
         //arrange
         when(sut.isInStaffMode(player)).thenReturn(true);
-        when(sut.leaveStaffMode(player)).thenReturn(true);
+        when(sut.leaveStaffMode(player)).thenReturn(1);
 
         //act
         var actual = sut.toggleStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         verify(sut).leaveStaffMode(player);
     }
 
@@ -67,7 +66,7 @@ class StaffModeTest {
         var actual = sut.enterStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         verify(player).setInvulnerable(true);
         verify(player).setAllowFlight(true);
         verify(player).sendMessage(IStaffMode.ENTER_STAFF_MODE_MESSAGE);
@@ -87,7 +86,7 @@ class StaffModeTest {
         var actual = sut.enterStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         verify(player, never()).setInvulnerable(true);
         verify(player, never()).setAllowFlight(true);
         verify(player).sendMessage(IStaffMode.ENTER_STAFF_MODE_MESSAGE);
@@ -107,7 +106,7 @@ class StaffModeTest {
         var actual = sut.enterStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         verify(player).setInvulnerable(true);
         verify(player, never()).setAllowFlight(true);
         verify(player).sendMessage(IStaffMode.ENTER_STAFF_MODE_MESSAGE);
@@ -127,7 +126,7 @@ class StaffModeTest {
         var actual = sut.enterStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         assertTrue(sut.playersInStaffMode.contains(uuid), "Player not added to players in staff mode list");
         verify(player, never()).setInvulnerable(true);
         verify(player).setAllowFlight(true);
@@ -145,7 +144,7 @@ class StaffModeTest {
         var actual = sut.leaveStaffMode(player);
 
         //assert
-        assertTrue(actual);
+        assertEquals(1, actual);
         assertFalse(sut.playersInStaffMode.contains(uuid), "Player added to players in staff mode list");
         verify(player).setInvulnerable(false);
         verify(player).setAllowFlight(false);

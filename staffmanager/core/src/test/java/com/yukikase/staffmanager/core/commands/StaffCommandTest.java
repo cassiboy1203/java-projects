@@ -2,12 +2,11 @@ package com.yukikase.staffmanager.core.commands;
 
 import com.yukikase.staffmanager.core.staffmode.IStaffMode;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class StaffCommandTest {
@@ -39,29 +38,14 @@ class StaffCommandTest {
         var player = mock(Player.class);
         var command = mock(Command.class);
 
-        when(staffMode.toggleStaffMode(player)).thenReturn(true);
+        when(staffMode.toggleStaffMode(player)).thenReturn(1);
 
         //act
-        var actual = sut.onCommand(player, null);
+        var actual = sut.onCommand(player);
 
         //assert
         verify(staffMode).toggleStaffMode(player);
 
-        assertTrue(actual);
-    }
-
-    @Test
-    void testOnCommandWithNonPlayer() {
-        //arrange
-        var sender = mock(CommandSender.class);
-        var command = mock(Command.class);
-
-        //act
-        var actual = sut.onCommand(sender, null);
-
-        //assert
-        verify(staffMode, never()).toggleStaffMode(any());
-
-        assertFalse(actual);
+        assertEquals(1, actual);
     }
 }

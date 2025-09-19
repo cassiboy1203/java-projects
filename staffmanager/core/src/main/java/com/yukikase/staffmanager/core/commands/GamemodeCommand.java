@@ -1,17 +1,16 @@
 package com.yukikase.staffmanager.core.commands;
 
+import com.mojang.brigadier.Command;
 import com.yukikase.framework.anotations.injection.Component;
 import com.yukikase.framework.anotations.injection.Inject;
 import com.yukikase.lib.annotations.command.Alias;
-import com.yukikase.lib.exceptions.InvalidCommandUsageException;
-import com.yukikase.lib.exceptions.PlayerNotFoundException;
+import com.yukikase.lib.annotations.command.Argument;
 import com.yukikase.lib.exceptions.UnauthorizedException;
 import com.yukikase.lib.interfaces.ICommand;
 import com.yukikase.lib.permission.IPermissionHandler;
 import com.yukikase.lib.permission.Permission;
 import com.yukikase.staffmanager.core.PermissionRegister;
 import com.yukikase.staffmanager.core.staffmode.IStaffMode;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
@@ -25,97 +24,69 @@ public class GamemodeCommand implements ICommand {
     static final String PLAYER_NO_PERMISSION_GAMEMODE_OTHER = "Player does not have permission to change another players gamemode outside of staff mode";
     static final String PLAYER_NO_PERMISSON_GAMEMODE_OTHER_STAFF = "Player does not have permission to change another players gamemode";
 
-    private final IPermissionHandler permissionHandler;
     private final IStaffMode staffMode;
+    private final IPermissionHandler permissionHandler;
 
     @Inject
-    public GamemodeCommand(IPermissionHandler permissionHandler, IStaffMode staffMode) {
-        this.permissionHandler = permissionHandler;
+    public GamemodeCommand(IStaffMode staffMode, IPermissionHandler permissionHandler) {
         this.staffMode = staffMode;
+        this.permissionHandler = permissionHandler;
     }
 
     @Override
     public String name() {
-        return NAME;
+        return "gamemode";
     }
 
     @Override
     public Permission permission() {
-        return PermissionRegister.STAFF_MODE_GAMEMODE;
+        return PermissionRegister.GAMEMODE_BASE;
     }
 
-    @Override
     @Alias(alias = "gm")
-    @Alias(alias = "gamemode")
-    public boolean onCommand(CommandSender sender, String[] args) {
-        throw new InvalidCommandUsageException();
+    public int onCommand(CommandSender sender, @Argument(value = "gamemode", suggestions = {"0", "1", "2", "3", "s", "c", "a", "sp", "survival", "creative", "adventure", "spectator"}) String gamemodeArg, @Argument(value = "target", optional = true) Player other) {
+        var gamemode = switch (gamemodeArg.toLowerCase()) {
+            case "0", "survival", "s" -> GameMode.SURVIVAL;
+            case "1", "creative", "c" -> GameMode.CREATIVE;
+            case "2", "adventure", "a" -> GameMode.ADVENTURE;
+            case "3", "spectator", "sp" -> GameMode.SPECTATOR;
+            default -> throw new IllegalArgumentException("Invalid gamemode");
+        };
+
+        return changeGamemode(sender, gamemode, other);
     }
 
     @Alias(alias = "gmc")
-    @Alias(alias = "gm", subcommand = "creative")
-    @Alias(subcommand = "creative")
-    @Alias(alias = "gm", subcommand = "1")
-    @Alias(alias = "gm", subcommand = "c")
-    @Alias(subcommand = "1")
-    @Alias(subcommand = "c")
-    public boolean onCreative(CommandSender sender, String[] args) {
-        return changeGamemode(sender, GameMode.CREATIVE, args);
+    public int onCreative(CommandSender sender, @Argument(value = "target", optional = true) Player other) {
+        return changeGamemode(sender, GameMode.CREATIVE, other);
     }
 
     @Alias(alias = "gms")
-    @Alias(alias = "gm", subcommand = "survival")
-    @Alias(subcommand = "survival")
-    @Alias(alias = "gm", subcommand = "0")
-    @Alias(alias = "gm", subcommand = "s")
-    @Alias(subcommand = "0")
-    @Alias(subcommand = "s")
-    public boolean onSurvival(CommandSender sender, String[] args) {
-        return changeGamemode(sender, GameMode.SURVIVAL, args);
-    }
-
-    @Alias(alias = "gmsp")
-    @Alias(alias = "gm", subcommand = "spectator")
-    @Alias(subcommand = "spectator")
-    @Alias(alias = "gm", subcommand = "4")
-    @Alias(alias = "gm", subcommand = "sp")
-    @Alias(subcommand = "4")
-    @Alias(subcommand = "sp")
-    public boolean onSpectator(CommandSender sender, String[] args) {
-        return changeGamemode(sender, GameMode.SPECTATOR, args);
+    public int onSurvival(CommandSender sender, @Argument(value = "target", optional = true) Player other) {
+        return changeGamemode(sender, GameMode.SURVIVAL, other);
     }
 
     @Alias(alias = "gma")
-    @Alias(alias = "gm", subcommand = "adventure")
-    @Alias(subcommand = "adventure")
-    @Alias(alias = "gm", subcommand = "3")
-    @Alias(alias = "gm", subcommand = "a")
-    @Alias(subcommand = "3")
-    @Alias(subcommand = "a")
-    public boolean onAdventure(CommandSender sender, String[] args) {
-        return changeGamemode(sender, GameMode.ADVENTURE, args);
+    public int onAdventure(CommandSender sender, @Argument(value = "target", optional = true) Player other) {
+        return changeGamemode(sender, GameMode.ADVENTURE, other);
     }
 
-    private boolean changeGamemode(CommandSender sender, GameMode gamemode, String[] args) {
+    @Alias(alias = "gmsp")
+    public int onSpectator(CommandSender sender, @Argument(value = "target", optional = true) Player other) {
+        return changeGamemode(sender, GameMode.SPECTATOR, other);
+    }
+
+    private int changeGamemode(CommandSender sender, GameMode gamemode, Player other) {
         if (sender instanceof Player player) {
             if (!staffMode.isInStaffMode(player) && !this.permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_BASE))
                 throw new UnauthorizedException("Player does not have permission to change gamemode");
 
-            if (args.length == 0) {
-                changeGamemode(player, gamemode);
-                return true;
-            }
-        }
-
-        if (args.length == 1) {
-            var other = Bukkit.getPlayer(args[0]);
             if (other == null) {
-                throw new PlayerNotFoundException();
+                changeGamemode(player, gamemode);
+                return Command.SINGLE_SUCCESS;
             }
-
-            return changeGamemode(sender, other, gamemode);
-        } else {
-            throw new InvalidCommandUsageException();
         }
+        return changeGamemode(sender, other, gamemode);
     }
 
     private void changeGamemode(Player player, GameMode gamemode) {
@@ -124,7 +95,7 @@ public class GamemodeCommand implements ICommand {
         player.sendMessage(String.format(GAMEMODE_CHANGED_MESSAGE, ChatColor.YELLOW, gamemode.name().toLowerCase()));
     }
 
-    private boolean changeGamemode(CommandSender sender, Player other, GameMode gamemode) {
+    private int changeGamemode(CommandSender sender, Player other, GameMode gamemode) {
         if (sender instanceof Player player) {
             if (!staffMode.isInStaffMode(player)) {
                 if (!this.permissionHandler.playerHasPermission(player, PermissionRegister.GAMEMODE_OTHER))
@@ -135,6 +106,6 @@ public class GamemodeCommand implements ICommand {
             }
         }
         other.setGameMode(gamemode);
-        return true;
+        return Command.SINGLE_SUCCESS;
     }
 }

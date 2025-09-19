@@ -2,11 +2,11 @@ package com.yukikase.staffmanager.core.commands;
 
 import com.yukikase.framework.anotations.injection.Component;
 import com.yukikase.framework.anotations.injection.Inject;
+import com.yukikase.lib.annotations.command.Alias;
 import com.yukikase.lib.interfaces.ICommand;
 import com.yukikase.lib.permission.Permission;
 import com.yukikase.staffmanager.core.PermissionRegister;
 import com.yukikase.staffmanager.core.staffmode.IStaffMode;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @Component
@@ -30,12 +30,8 @@ public class StaffCommand implements ICommand {
         return PermissionRegister.STAFF_MODE_BASE;
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, String[] args) {
-        if (sender instanceof Player player) {
-            return staffMode.toggleStaffMode(player);
-        }
-
-        return false;
+    @Alias
+    public int onCommand(Player player) {
+        return staffMode.toggleStaffMode(player);
     }
 }

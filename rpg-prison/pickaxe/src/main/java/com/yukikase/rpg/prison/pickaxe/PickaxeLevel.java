@@ -6,7 +6,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class PickaxeLevel extends Level {
-    private static final int MAX_LEVEL = 125;
+    public static final int MAX_LEVEL = 125;
 
     private static final int BASE_XP = 10;
     private static final int XP_PER_LEVEL = 100;

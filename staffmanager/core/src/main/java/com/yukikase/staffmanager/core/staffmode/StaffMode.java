@@ -1,5 +1,6 @@
 package com.yukikase.staffmanager.core.staffmode;
 
+import com.mojang.brigadier.Command;
 import com.yukikase.framework.anotations.injection.Component;
 import com.yukikase.framework.anotations.injection.Inject;
 import com.yukikase.framework.anotations.injection.Singleton;
@@ -28,7 +29,7 @@ public class StaffMode implements IStaffMode {
     }
 
     @Override
-    public boolean toggleStaffMode(Player player) {
+    public int toggleStaffMode(Player player) {
         if (isInStaffMode(player))
             return leaveStaffMode(player);
 
@@ -36,17 +37,17 @@ public class StaffMode implements IStaffMode {
     }
 
     @Override
-    public boolean leaveStaffMode(Player player) {
+    public int leaveStaffMode(Player player) {
         this.playersInStaffMode.remove(player.getUniqueId());
 
         player.setInvulnerable(false);
         player.setAllowFlight(false);
         player.sendMessage(LEAVE_STAFF_MODE_MESSAGE);
-        return true;
+        return Command.SINGLE_SUCCESS;
     }
 
     @Override
-    public boolean enterStaffMode(Player player) {
+    public int enterStaffMode(Player player) {
         this.playersInStaffMode.add(player.getUniqueId());
 
         if (this.permissionHandler.playerHasPermission(player, PermissionRegister.STAFF_MODE_GOD))
@@ -55,6 +56,6 @@ public class StaffMode implements IStaffMode {
             player.setAllowFlight(true);
 
         player.sendMessage(ENTER_STAFF_MODE_MESSAGE);
-        return true;
+        return Command.SINGLE_SUCCESS;
     }
 }

@@ -12,9 +12,9 @@ public interface IStaffMode {
 
     boolean isInStaffMode(Player player);
 
-    boolean toggleStaffMode(Player player);
+    int toggleStaffMode(Player player);
 
-    boolean leaveStaffMode(Player player);
+    int leaveStaffMode(Player player);
 
-    boolean enterStaffMode(Player player);
+    int enterStaffMode(Player player);
 }
