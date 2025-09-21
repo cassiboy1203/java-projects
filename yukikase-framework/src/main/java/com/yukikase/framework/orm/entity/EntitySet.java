@@ -22,6 +22,8 @@ public interface EntitySet<T> {
 
     void add(T entity);
 
+    void addIfNotExists(T entity);
+
     record OrderClause(String field, boolean descending) {
     }
 }

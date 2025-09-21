@@ -1,0 +1,9 @@
+name: StaffManagerPermissions
+version: ${version}
+main: com.yukikase.staffmanager.permissions.StaffManagerPermissions
+api-version: '1.21'
+authors:
+  - ゆきかせ
+depend:
+  - YukikaseLib
+  - StaffManagerCore

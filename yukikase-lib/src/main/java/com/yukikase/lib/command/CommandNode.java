@@ -71,6 +71,7 @@ public class CommandNode {
     }
 
     private LiteralArgumentBuilder<CommandSourceStack> addArguments(LiteralArgumentBuilder<CommandSourceStack> root, ICommand command) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (method == null) return root;
         var params = method.getParameters();
         if (params.length == 0) throw new IllegalArgumentException("No arguments specified");
         if (!CommandSender.class.isAssignableFrom(params[0].getType()))

@@ -13,11 +13,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.zip.ZipInputStream;
 
 import static com.yukikase.framework.TypeUtil.convertValue;
 
 public final class DefaultInjector implements Injector {
+
+    private final Logger logger = Logger.getLogger(DefaultInjector.class.getName());
 
     final Map<Class<?>, Set<Tuple<String, Class<?>>>> diMap;
     final List<Class<?>> configurations;
@@ -307,6 +310,7 @@ public final class DefaultInjector implements Injector {
                 }
             } catch (IllegalAccessException | InvocationTargetException | InstantiationException |
                      NoSuchMethodException e) {
+                logger.severe(e.getMessage());
                 throw new RuntimeException(e);
             }
         }

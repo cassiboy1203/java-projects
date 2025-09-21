@@ -1,0 +1,5 @@
+# Kick the player from the server when something goes wrong while trying to add the custom permissible object to the player.
+# If this is false the player will not be kick and the paper permission system will be used for the player.
+kickOnSetupFailure: true
+# The message the player see if he gets kicked for a setup failure
+kickMessage: "Something went wrong while trying to join the server. Please try again. If this keeps happening contact the server administrator."

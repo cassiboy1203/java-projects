@@ -5,6 +5,7 @@
 rootProject.name = 'java_projects'
 include(':yukikase-lib')
 include(':staffmanager:core')
+include(':staffmanager:permissions')
 include(':yukikase-framework')
 include(':rpg-prison:core')
 include(':rpg-prison:pickaxe')

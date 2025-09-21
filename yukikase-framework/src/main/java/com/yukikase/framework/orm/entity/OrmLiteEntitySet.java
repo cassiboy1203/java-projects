@@ -92,4 +92,13 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
             throw new NoEntityFoundException("Something went wrong while creating entity", e);
         }
     }
+
+    @Override
+    public void addIfNotExists(T entity) {
+        try {
+            dao.createIfNotExists(entity);
+        } catch (SQLException e) {
+            throw new NoEntityFoundException("Something went wrong while creating entity", e);
+        }
+    }
 }
