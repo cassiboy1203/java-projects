@@ -12,6 +12,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 public abstract class YukikasePlugin extends JavaPlugin {
@@ -52,11 +53,30 @@ public abstract class YukikasePlugin extends JavaPlugin {
     protected void doDisable() {
     }
 
+    @SuppressWarnings("unchecked")
+    protected <T extends JavaPlugin> T getRequiredDependency(String name) {
+        T dependency = (T) Bukkit.getPluginManager().getPlugin(name);
+
+        if (dependency == null) {
+            getLogger().log(Level.SEVERE, "Missing dependency: " + name);
+            Bukkit.getPluginManager().disablePlugin(this);
+            throw new IllegalStateException("Missing dependency: " + name);
+        }
+
+        return dependency;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends JavaPlugin> Optional<T> getOptionalDependency(String name) {
+        T dependency = (T) Bukkit.getPluginManager().getPlugin(name);
+        return Optional.ofNullable(dependency);
+    }
+
     private Injector register() {
         YukikaseLib lib = (YukikaseLib) Bukkit.getPluginManager().getPlugin("YukikaseLib");
 
         if (lib == null) {
-            Bukkit.getLogger().log(Level.SEVERE, "Missing dependency: YukikaseLib");
+            getLogger().log(Level.SEVERE, "Missing dependency: YukikaseLib");
             Bukkit.getPluginManager().disablePlugin(this);
             return null;
         }

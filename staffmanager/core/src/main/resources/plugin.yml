@@ -1,4 +1,4 @@
-name: StaffmanagerCore
+name: StaffManagerCore
 version: ${version}
 main: com.yukikase.staffmanager.core.StaffManagerCore
 api-version: '1.21'
