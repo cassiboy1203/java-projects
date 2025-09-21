@@ -28,7 +28,6 @@ public class Pickaxes implements IPickaxes {
     private final PickaxeMaterial baseMaterial;
     private final EntitySet<PickaxeMaterial> materials;
     private final Map<UUID, PickaxeEntity> pickaxeCache;
-    private final YukikasePlugin plugin;
     private final NamespacedKey key;
 
     private final Logger logger;
@@ -44,7 +43,6 @@ public class Pickaxes implements IPickaxes {
 
         this.pickaxeCache = new HashMap<>();
         this.pickaxes = pickaxes;
-        this.plugin = plugin;
         this.key = new NamespacedKey(plugin, "pickaxe");
         this.materials = material;
         this.logger = plugin.getLogger();
@@ -102,7 +100,6 @@ public class Pickaxes implements IPickaxes {
             }
 
             if (experience >= nextLevel.requiredExperience()) {
-                experience -= nextLevel.requiredExperience();
                 level += 1;
                 nextLevel = PickaxeLevel.getLevel(level + 1);
             } else {
@@ -204,8 +201,6 @@ public class Pickaxes implements IPickaxes {
         nextMaterial = materials.get(pickaxe.getMaterial().getNextMaterial().getName());
         if (nextMaterial == null) return;
         pickaxe.setMaterial(nextMaterial);
-        pickaxe.setLevel(1);
-        pickaxe.setExperience(0);
         pickaxes.update(pickaxe);
     }
 
