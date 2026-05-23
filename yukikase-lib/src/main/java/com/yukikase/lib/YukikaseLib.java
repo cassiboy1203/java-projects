@@ -3,16 +3,22 @@ package com.yukikase.lib;
 import com.yukikase.framework.YukikaseFramework;
 import com.yukikase.framework.anotations.injection.Singleton;
 import com.yukikase.framework.injection.Injector;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Singleton
 public class YukikaseLib extends JavaPlugin {
 
+    private static final List<Class<? extends Listener>> LISTENERS = new ArrayList<>();
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
+
     }
 
     public Injector registerPlugin(YukikasePlugin plugin) {
@@ -34,5 +40,12 @@ public class YukikaseLib extends JavaPlugin {
         }
         injector.runConfigurations();
         return injector;
+    }
+
+    public static void registerListener(YukikasePlugin plugin, Listener listener) {
+        if (!LISTENERS.contains(listener.getClass())) {
+            LISTENERS.add(listener.getClass());
+            plugin.getServer().getPluginManager().registerEvents(listener, plugin);
+        }
     }
 }

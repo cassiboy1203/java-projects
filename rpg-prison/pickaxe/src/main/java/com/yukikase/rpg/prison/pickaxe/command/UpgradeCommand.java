@@ -24,7 +24,7 @@ public class UpgradeCommand implements ICommand {
     }
 
     @Alias
-    private int onCommand(Player player) {
+    public int onCommand(Player player) {
         var pickaxeItem = pickaxes.getPickaxeInInventory(player);
         var inventory = player.getInventory();
         if (pickaxeItem != null) {

@@ -16,99 +16,79 @@ public class BreakableBlockType {
     private int resistance;
 
     @DatabaseField
-    private Material drop;
-
-    @DatabaseField
-    private Material smeltedDrop;
-
-    @DatabaseField
-    private int minDrop;
-
-    @DatabaseField
-    private int maxDrop;
-
-    @DatabaseField
-    private int smeltedDropMultiplier;
-
-    @DatabaseField
     private int respawnTime;
+
+    @DatabaseField
+    private Material respawnMaterial;
+
+    @DatabaseField
+    private int experience;
+
+    @DatabaseField
+    private int energy;
 
     protected BreakableBlockType() {
     }
 
-    public BreakableBlockType(Material material, int hardness, int resistance, Material drop, Material smeltedDrop, int minDrop, int maxDrop, int smeltedDropMultiplier, int respawnTime) {
+    public BreakableBlockType(Material material, int hardness, int resistance, int respawnTime) {
         this.material = material.toString();
         this.hardness = hardness;
         this.resistance = resistance;
-        this.drop = drop;
-        this.smeltedDrop = smeltedDrop;
-        this.minDrop = minDrop;
-        this.maxDrop = maxDrop;
-        this.smeltedDropMultiplier = smeltedDropMultiplier;
         this.respawnTime = respawnTime;
     }
 
-    public Material getMaterial() {
+    public Material material() {
         return Material.getMaterial(material);
     }
 
-    public void setMaterial(Material material) {
-        this.material = material.name();
-    }
-
-    public int getHardness() {
+    public int hardness() {
         return hardness;
     }
 
-    public void setHardness(int hardness) {
+    public void hardness(int hardness) {
         this.hardness = hardness;
     }
 
-    public int getResistance() {
+    public int resistance() {
         return resistance;
     }
 
-    public void setResistance(int resistance) {
+    public void resistance(int resistance) {
         this.resistance = resistance;
     }
 
-    public Material getDrop() {
-        return drop;
-    }
-
-    public void setDrop(Material drop) {
-        this.drop = drop;
-    }
-
-    public Material getSmeltedDrop() {
-        return smeltedDrop;
-    }
-
-    public void setSmeltedDrop(Material smeltedDrop) {
-        this.smeltedDrop = smeltedDrop;
-    }
-
-    public int getMinDrop() {
-        return minDrop;
-    }
-
-    public void setMinDrop(int minDrop) {
-        this.minDrop = minDrop;
-    }
-
-    public int getMaxDrop() {
-        return maxDrop;
-    }
-
-    public void setMaxDrop(int maxDrop) {
-        this.maxDrop = maxDrop;
-    }
-
-    public int getRespawnTime() {
+    public int respawnTime() {
         return respawnTime;
     }
 
-    public void setRespawnTime(int respawnTime) {
+    public void respawnTime(int respawnTime) {
         this.respawnTime = respawnTime;
+    }
+
+    public Material respawnMaterial() {
+        if (respawnMaterial == null) {
+            return Material.STONE;
+        }
+        return respawnMaterial;
+    }
+
+    public void respawnMaterial(Material respawnMaterial) {
+        this.respawnMaterial = respawnMaterial;
+    }
+
+    public int experience() {
+        return experience;
+    }
+
+    public void experience(int experience) {
+        this.experience = experience;
+    }
+
+    public int energy() {
+        return energy;
+    }
+
+    public void energy(int energy) {
+        this.energy = energy;
     }
 }

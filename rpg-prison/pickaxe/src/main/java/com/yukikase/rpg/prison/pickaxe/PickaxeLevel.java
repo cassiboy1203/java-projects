@@ -6,16 +6,20 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class PickaxeLevel extends Level {
-    public static final int MAX_LEVEL = 125;
+    public static final int MAX_LEVEL = 150;
 
-    private static final int BASE_XP = 10;
+    private static final int BASE_XP = 0;
     private static final int XP_PER_LEVEL = 100;
 
     private static final SortedMap<Integer, PickaxeLevel> levels = new TreeMap<>();
 
     static {
         for (int i = 1; i <= MAX_LEVEL; i++) {
-            levels.put(i, new PickaxeLevel(i, Math.round(XP_PER_LEVEL * Math.pow(i - 1, 2) + BASE_XP)));
+            if (i == 1) {
+                levels.put(i, new PickaxeLevel(i, 0));
+                continue;
+            }
+            levels.put(i, new PickaxeLevel(i, Math.round(XP_PER_LEVEL * Math.pow(i - 1, 3) + BASE_XP)));
         }
     }
 

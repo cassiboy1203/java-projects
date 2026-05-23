@@ -2,6 +2,7 @@ package com.yukikase.rpg.prison.pickaxe.event.listener;
 
 import com.yukikase.framework.anotations.injection.Component;
 import com.yukikase.framework.anotations.injection.Inject;
+import com.yukikase.lib.gui.scoreboard.ScoreBoardHandler;
 import com.yukikase.rpg.prison.pickaxe.IPickaxes;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
@@ -120,5 +121,22 @@ public class PickaxeEventListener implements Listener {
         var player = event.getPlayer();
         if (!pickaxes.isPickaxe(player, event.getItem())) return;
         event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onItemSwap(PlayerItemHeldEvent event) {
+        var player = event.getPlayer();
+        var item = player.getInventory().getItem(event.getNewSlot());
+        var lastItem = player.getInventory().getItem(event.getPreviousSlot());
+        var scoreboard = ScoreBoardHandler.get(IPickaxes.SCOREBOARD_KEY);
+        if (pickaxes.isPickaxe(player, item)) {
+            if (scoreboard == null) {
+                scoreboard = pickaxes.createScoreboard(player);
+            }
+            scoreboard.show(player);
+        } else if (pickaxes.isPickaxe(player, lastItem)) {
+            if (scoreboard != null)
+                scoreboard.hide(player);
+        }
     }
 }

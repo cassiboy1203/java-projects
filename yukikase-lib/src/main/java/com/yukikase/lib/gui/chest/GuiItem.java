@@ -1,4 +1,4 @@
-package com.yukikase.lib.gui;
+package com.yukikase.lib.gui.chest;
 
 import org.bukkit.inventory.ItemStack;
 

@@ -13,6 +13,10 @@ public class PickaxeEntity {
     int level;
     @DatabaseField
     long experience;
+    @DatabaseField
+    int energy;
+    @DatabaseField
+    int energyLevel;
     @DatabaseField(foreign = true, foreignAutoRefresh = true)
     PickaxeMaterial material;
 
@@ -26,35 +30,51 @@ public class PickaxeEntity {
         this.material = material;
     }
 
-    public UUID getOwner() {
+    public UUID owner() {
         return owner;
     }
 
-    public void setOwner(UUID owner) {
+    public void owner(UUID owner) {
         this.owner = owner;
     }
 
-    public int getLevel() {
+    public int level() {
         return level;
     }
 
-    public void setLevel(int level) {
+    public void level(int level) {
         this.level = level;
     }
 
-    public long getExperience() {
+    public long experience() {
         return experience;
     }
 
-    public void setExperience(long experience) {
+    public void experience(long experience) {
         this.experience = experience;
     }
 
-    public PickaxeMaterial getMaterial() {
+    public PickaxeMaterial material() {
         return material;
     }
 
-    public void setMaterial(PickaxeMaterial material) {
+    public void material(PickaxeMaterial material) {
         this.material = material;
+    }
+
+    public int energy() {
+        return energy;
+    }
+
+    public void energy(int energy) {
+        this.energy = energy;
+    }
+
+    public void energyLevel(int energyLevel) {
+        this.energyLevel = energyLevel;
+    }
+
+    public int energyLevel() {
+        return energyLevel;
     }
 }

@@ -21,6 +21,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             this.dao = DaoManager.createDao(connector.getConnection(), entityClass);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -35,6 +36,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             return dao.query(preparedQuery);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("No entity found for given query");
         }
     }
@@ -44,6 +46,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             return dao.queryForId(primaryKey);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("No entity found for primary key: " + primaryKey, e);
         }
     }
@@ -53,6 +56,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             return dao.queryForAll();
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("No entity found of type " + entityClass.getName(), e);
         }
     }
@@ -62,6 +66,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             return dao.countOf();
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("Something went wrong while counting entities", e);
         }
     }
@@ -71,6 +76,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             dao.update(entity);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("Something went wrong while updating entity", e);
         }
     }
@@ -80,6 +86,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             dao.delete(entity);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("Something went wrong while deleting entity", e);
         }
     }
@@ -89,6 +96,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             dao.create(entity);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("Something went wrong while creating entity", e);
         }
     }
@@ -98,6 +106,7 @@ public class OrmLiteEntitySet<T> implements EntitySet<T> {
         try {
             dao.createIfNotExists(entity);
         } catch (SQLException e) {
+            System.out.println(e.getMessage());
             throw new NoEntityFoundException("Something went wrong while creating entity", e);
         }
     }

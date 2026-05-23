@@ -21,20 +21,20 @@ public class MiningTimer extends Timer {
         this.breakableBlocks = breakableBlocks;
         this.damage = damage;
 
-        this.maxHealth = block.getType().getHardness() * 20;
+        this.maxHealth = block.type().hardness() * 20;
         this.health = maxHealth;
     }
 
     @Override
     public void run() {
         if (isCancelled()) return;
-        if (!block.getLocation().getBlock().getType().equals(block.getType().getMaterial())) {
+        if (!block.location().getBlock().getType().equals(block.type().material())) {
             cancel();
             return;
         }
-        player.sendBlockDamage(block.getLocation(), 0, BreakableBlocks.ENTITY_ID);
-        if (damage < block.getType().getResistance()) {
-            breakableBlocks.resetMiningAnimation(player, block.getLocation());
+        player.sendBlockDamage(block.location(), 0, BreakableBlocks.ENTITY_ID);
+        if (damage < block.type().resistance()) {
+            breakableBlocks.resetMiningAnimation(player, block.location());
             return;
         }
 
@@ -42,13 +42,13 @@ public class MiningTimer extends Timer {
 
         if (health <= 0) {
             breakableBlocks.breakBlock(player, block);
-            breakableBlocks.resetMiningAnimation(player, block.getLocation());
+            breakableBlocks.resetMiningAnimation(player, block.location());
             cancel();
             return;
         }
 
         var stage = (int) Math.min(9, Math.max(0, Math.floor((double) (maxHealth - health) / maxHealth * 10)));
 
-        breakableBlocks.sendBlockBreakStage(player, block.getLocation(), stage);
+        breakableBlocks.sendBlockBreakStage(player, block.location(), stage);
     }
 }
